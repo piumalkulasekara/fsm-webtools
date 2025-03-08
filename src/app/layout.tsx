@@ -2,6 +2,15 @@ import type { Metadata } from "next"
 import { Source_Sans_3, Roboto_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { ModeToggle } from "@/components/mode-toggle"
+import {
+  ClerkProvider,
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from "@clerk/nextjs"
 
 const sourceSansPro = Source_Sans_3({
   variable: "--font-source-sans",
@@ -38,7 +47,19 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <ClerkProvider>
+            <header className="flex justify-end items-center p-4 gap-4 h-16">
+              <ModeToggle />
+              <SignedOut>
+                <SignInButton />
+                <SignUpButton />
+              </SignedOut>
+              <SignedIn>
+                <UserButton />
+              </SignedIn>
+            </header>
+            {children}
+          </ClerkProvider>
         </ThemeProvider>
       </body>
     </html>
