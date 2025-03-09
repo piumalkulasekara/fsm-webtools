@@ -10,3 +10,4 @@ Piumal Kulasekara @LeapKoders Pvt. Ltd
 - [ ] Fetch and set Access Group etc
 - [ ] Role Setup
 - [ ] License Setup
+- [ ] Add [Semantic Release](https://semantic-release.gitbook.io/semantic-release/)
