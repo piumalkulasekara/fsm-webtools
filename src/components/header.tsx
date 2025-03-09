@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
 import { Menu, X } from "lucide-react"
@@ -43,7 +44,7 @@ export function Header() {
   const { theme } = useNextThemes()
 
   const logoSrc =
-    theme === "dark" ? "/leapkoders-logo-invert.png" : "/leapkoders-logo.png"
+    theme === "dark" ? "/leapkoders-logo-invert.gif" : "/leapkoders-logo.gif"
   const homeLink = isSignedIn ? "/dashboard" : "/"
 
   return (
@@ -51,14 +52,16 @@ export function Header() {
       <div className="flex h-16 items-center px-4 sm:px-6">
         {/* Logo - Left aligned */}
         <Link href={homeLink} className="flex items-center gap-2">
+          
           <Image
             src={logoSrc || "/placeholder.svg"}
             alt="LeapKoders Logo"
-            width={40}
-            height={40}
+            width={80}
+            height={80}
+            unoptimized
             className="rounded-sm"
           />
-          <span className="hidden font-bold sm:inline-block">LeapKoders</span>
+          {/* <span className="hidden font-bold sm:inline-block">LeapKoders</span> */}
         </Link>
 
         {/* Desktop Navigation - Right aligned with flex-1 to push it to the right */}
@@ -135,6 +138,9 @@ export function Header() {
           </div>
         </div>
       </div>
+
+      {/* Separator with a small shadow */}
+      <Separator className="shadow-sm" />
 
       {/* Mobile Navigation */}
       {isMobileMenuOpen && (
