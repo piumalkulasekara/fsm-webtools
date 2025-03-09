@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import { useState } from "react"
 import Link from "next/link"
@@ -46,84 +46,80 @@ export function Header() {
   const { isLoaded, isSignedIn } = useUser()
   const { theme } = useNextThemes()
 
-  // Determine logo based on theme
-  const logoSrc = theme === "dark" ? "/leapkoders-logo.gif" : "/leapkoders-logo.gif"
-
-  // Determine home link based on authentication
+  const logoSrc = theme === "dark" ? "/leapkoders-logo-invert.gif" : "/leapkoders-logo.gif"
   const homeLink = isSignedIn ? "/dashboard" : "/"
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Link href={homeLink} className="flex items-center gap-2">
-            <Image
-              src={logoSrc || "/leapkoders-logo.png"}
-              alt="LeapKoders Logo"
-              width={100}
-              priority
-              height={100}
-              className="rounded-sm"
-            />
-            {/* <span className="hidden font-bold sm:inline-block">LeapKoders</span> */}
-          </Link>
-        </div>
+      <div className="flex h-16 items-center px-4 sm:px-6">
+        {/* Logo - Left aligned */}
+        <Link href={homeLink} className="flex items-center gap-2">
+          <Image
+            src={logoSrc || "/placeholder.svg"}
+            alt="LeapKoders Logo"
+            width={100}
+            height={100}
+            className="rounded-sm"
+          />
+          {/* <span className="hidden font-bold sm:inline-block">LeapKoders</span> */}
+        </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
-          {navItems
-            .filter((item) => !item.isAuthRequired || (item.isAuthRequired && isSignedIn))
-            .map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary",
-                  pathname === item.href ? "text-foreground" : "text-muted-foreground",
-                )}
-              >
-                {item.title}
-              </Link>
-            ))}
+        {/* Desktop Navigation - Right aligned with flex-1 to push it to the right */}
+        <div className="flex-1 flex justify-end">
+          <nav className="hidden md:flex items-center gap-6">
+            {navItems
+              .filter((item) => !item.isAuthRequired || (item.isAuthRequired && isSignedIn))
+              .map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "text-sm font-medium transition-colors hover:text-primary",
+                    pathname === item.href ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {item.title}
+                </Link>
+              ))}
 
-          <div className="flex items-center gap-4">
-            {isLoaded && !isSignedIn ? (
-              <>
-                <SignInButton mode="modal">
-                  <Button variant="outline" size="sm">
-                    Log in
-                  </Button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <Button size="sm">Sign up</Button>
-                </SignUpButton>
-              </>
-            ) : isLoaded && isSignedIn ? (
-              <UserButton afterSignOutUrl="/" />
-            ) : null}
+            <div className="flex items-center gap-4">
+              {isLoaded && !isSignedIn ? (
+                <>
+                  <SignInButton mode="modal">
+                    <Button variant="outline" size="sm">
+                      Log in
+                    </Button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <Button size="sm">Sign up</Button>
+                  </SignUpButton>
+                </>
+              ) : isLoaded && isSignedIn ? (
+                <UserButton afterSignOutUrl="/" />
+              ) : null}
+              <ModeToggle />
+            </div>
+          </nav>
+
+          {/* Mobile Menu Button */}
+          <div className="flex items-center gap-2 md:hidden">
+            {isLoaded && isSignedIn && <UserButton afterSignOutUrl="/" />}
             <ModeToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+            >
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
           </div>
-        </nav>
-
-        {/* Mobile Menu Button */}
-        <div className="flex items-center gap-2 md:hidden">
-          {isLoaded && isSignedIn && <UserButton afterSignOutUrl="/" />}
-          <ModeToggle />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-          >
-            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
         </div>
       </div>
 
       {/* Mobile Navigation */}
       {isMobileMenuOpen && (
-        <div className="container md:hidden py-4 pb-6">
+        <div className="px-4 pb-6 md:hidden">
           <nav className="flex flex-col space-y-4">
             {navItems
               .filter((item) => !item.isAuthRequired || (item.isAuthRequired && isSignedIn))
