@@ -2,7 +2,7 @@
 Piumal Kulasekara @LeapKoders Pvt. Ltd
 
 ## Todo
-- [ ] Align Sign In/Up form to the middle.
+- [x] Align Sign In/Up form to the middle.
 - [ ] Make the Connection Profile placeholder.
 - [ ] Person Form
 - [ ] Add/Delete/Edit Button
