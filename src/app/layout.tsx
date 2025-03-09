@@ -11,6 +11,7 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/nextjs"
+import { Header } from "@/components/header"
 
 const sourceSansPro = Source_Sans_3({
   variable: "--font-source-sans",
@@ -48,6 +49,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ClerkProvider>
+            <Header />
             <header className="flex justify-end items-center p-4 gap-4 h-16">
               <ModeToggle />
               <SignedOut>
