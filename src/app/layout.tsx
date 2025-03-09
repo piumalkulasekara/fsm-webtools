@@ -2,15 +2,7 @@ import type { Metadata } from "next"
 import { Source_Sans_3, Roboto_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { ModeToggle } from "@/components/mode-toggle"
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs"
+import { ClerkProvider } from "@clerk/nextjs"
 import { Header } from "@/components/header"
 
 const sourceSansPro = Source_Sans_3({
@@ -38,7 +30,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head />
       <body
         className={`${sourceSansPro.variable} ${robotoMono.variable} antialiased`}
       >
@@ -50,16 +41,7 @@ export default function RootLayout({
         >
           <ClerkProvider>
             <Header />
-            <header className="flex justify-end items-center p-4 gap-4 h-16">
-              <ModeToggle />
-              <SignedOut>
-                <SignInButton />
-                <SignUpButton />
-              </SignedOut>
-              <SignedIn>
-                <UserButton />
-              </SignedIn>
-            </header>
+
             {children}
           </ClerkProvider>
         </ThemeProvider>

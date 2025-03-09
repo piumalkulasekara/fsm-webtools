@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useState } from "react"
 import Link from "next/link"
@@ -8,10 +8,8 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
 import { Menu, X } from "lucide-react"
-import {
-  useAuth,
-  UserButton,
-} from "@clerk/nextjs"
+import { useUser, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs"
+import { useTheme as useNextThemes } from "next-themes"
 
 interface NavItem {
   title: string
@@ -45,7 +43,11 @@ const navItems: NavItem[] = [
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
-  const { isLoaded, isSignedIn } = useAuth()
+  const { isLoaded, isSignedIn } = useUser()
+  const { theme } = useNextThemes()
+
+  // Determine logo based on theme
+  const logoSrc = theme === "dark" ? "/leapkoders-logo.gif" : "/leapkoders-logo.gif"
 
   // Determine home link based on authentication
   const homeLink = isSignedIn ? "/dashboard" : "/"
@@ -56,9 +58,10 @@ export function Header() {
         <div className="flex items-center gap-2">
           <Link href={homeLink} className="flex items-center gap-2">
             <Image
-              src="/leapkoders-logo.gif"
+              src={logoSrc || "/leapkoders-logo.png"}
               alt="LeapKoders Logo"
               width={100}
+              priority
               height={100}
               className="rounded-sm"
             />
@@ -69,19 +72,14 @@ export function Header() {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
           {navItems
-            .filter(
-              (item) =>
-                !item.isAuthRequired || (item.isAuthRequired && isSignedIn)
-            )
+            .filter((item) => !item.isAuthRequired || (item.isAuthRequired && isSignedIn))
             .map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
                   "text-sm font-medium transition-colors hover:text-primary",
-                  pathname === item.href
-                    ? "text-foreground"
-                    : "text-muted-foreground"
+                  pathname === item.href ? "text-foreground" : "text-muted-foreground",
                 )}
               >
                 {item.title}
@@ -91,14 +89,14 @@ export function Header() {
           <div className="flex items-center gap-4">
             {isLoaded && !isSignedIn ? (
               <>
-                <Link href="/sign-in">
+                <SignInButton mode="modal">
                   <Button variant="outline" size="sm">
                     Log in
                   </Button>
-                </Link>
-                <Link href="/sign-up">
+                </SignInButton>
+                <SignUpButton mode="modal">
                   <Button size="sm">Sign up</Button>
-                </Link>
+                </SignUpButton>
               </>
             ) : isLoaded && isSignedIn ? (
               <UserButton afterSignOutUrl="/" />
@@ -118,11 +116,7 @@ export function Header() {
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
           >
-            {isMobileMenuOpen ? (
-              <X className="h-5 w-5" />
-            ) : (
-              <Menu className="h-5 w-5" />
-            )}
+            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
       </div>
@@ -132,19 +126,14 @@ export function Header() {
         <div className="container md:hidden py-4 pb-6">
           <nav className="flex flex-col space-y-4">
             {navItems
-              .filter(
-                (item) =>
-                  !item.isAuthRequired || (item.isAuthRequired && isSignedIn)
-              )
+              .filter((item) => !item.isAuthRequired || (item.isAuthRequired && isSignedIn))
               .map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
                     "text-sm font-medium transition-colors hover:text-primary",
-                    pathname === item.href
-                      ? "text-foreground"
-                      : "text-muted-foreground"
+                    pathname === item.href ? "text-foreground" : "text-muted-foreground",
                   )}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -154,20 +143,14 @@ export function Header() {
 
             {isLoaded && !isSignedIn && (
               <div className="flex flex-col space-y-2 pt-2">
-                <Link
-                  href="/sign-in"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
+                <SignInButton mode="modal">
                   <Button variant="outline" className="w-full">
                     Log in
                   </Button>
-                </Link>
-                <Link
-                  href="/sign-up"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
+                </SignInButton>
+                <SignUpButton mode="modal">
                   <Button className="w-full">Sign up</Button>
-                </Link>
+                </SignUpButton>
               </div>
             )}
           </nav>
@@ -176,3 +159,4 @@ export function Header() {
     </header>
   )
 }
+
