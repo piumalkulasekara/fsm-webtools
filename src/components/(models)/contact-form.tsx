@@ -1,17 +1,18 @@
-"use client"
+"use client";
 
-import { useForm } from "react-hook-form"
-import { useMutation } from "@tanstack/react-query"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { useForm, SubmitHandler } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner"; // Import Sonner's toast
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 type ContactFormData = {
-  name: string
-  email: string
-  message: string
-}
+  name: string;
+  email: string;
+  message: string;
+};
 
 export function ContactForm() {
   const {
@@ -19,33 +20,39 @@ export function ContactForm() {
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<ContactFormData>()
+  } = useForm<ContactFormData>();
 
-  // Create a mutation using React Query to call your API route.
-  const mutation = useMutation({
+  const mutation = useMutation<
+    { success: boolean }, // TData: the response type
+    Error,                // TError: the error type
+    ContactFormData,      // TVariables: the form data type
+    unknown               // TContext (if needed)
+  >({
     mutationFn: async (data: ContactFormData) => {
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
-      })
+      });
+
       if (!response.ok) {
-        throw new Error("Error sending message")
+        throw new Error("Error sending message");
       }
-      return response.json()
+      return response.json();
     },
     onSuccess: () => {
-      alert("Message sent successfully!")
-      reset()
+      toast.success("Message sent successfully.");
+      reset();
     },
     onError: (error: Error) => {
-      alert(error.message || "Failed to send message.")
+      console.error("Error sending message:", error);
+      toast.error(error.message || "Failed to send message.");
     },
-  })
+  });
 
-  function onSubmit(data: ContactFormData) {
-    mutation.mutate(data)
-  }
+  const onSubmit: SubmitHandler<ContactFormData> = (data) => {
+    mutation.mutate(data);
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -89,5 +96,5 @@ export function ContactForm() {
         {mutation.status === "pending" ? "Sending..." : "Send Message"}
       </Button>
     </form>
-  )
+  );
 }
