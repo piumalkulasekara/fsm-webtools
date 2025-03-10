@@ -17,6 +17,7 @@ export async function POST(request: Request) {
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: Number(process.env.EMAIL_PORT),
+      secure: false, // typically 587 for TLS or 465 for SSL
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
