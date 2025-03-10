@@ -4,12 +4,16 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ClerkProvider } from "@clerk/nextjs"
 import { Header } from "@/components/header"
+import { Toaster } from "@/components/ui/sonner"
+import { Providers } from "@/app/_providers/providers"
 
+{
+  /* Basic Fonts */
+}
 const sourceSansPro = Source_Sans_3({
   variable: "--font-source-sans",
   subsets: ["latin"],
 })
-
 const robotoMono = Roboto_Mono({
   variable: "--font-roboto-mono",
   subsets: ["latin"],
@@ -40,9 +44,11 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ClerkProvider>
-            <Header />
-
-            {children}
+            <Providers>
+              <Header />
+              {children}
+              <Toaster />
+            </Providers>
           </ClerkProvider>
         </ThemeProvider>
       </body>
