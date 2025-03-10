@@ -1,21 +1,27 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { ModeToggle } from "@/components/mode-toggle"
-import { Menu, X } from "lucide-react"
-import { useUser, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs"
-import { useTheme as useNextThemes } from "next-themes"
-import { AboutPopup } from "@/components/(models)/about-popup" // Import the AboutPopup component
+import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { ModeToggle } from "@/components/mode-toggle";
+import { Menu, X } from "lucide-react";
+import {
+  useUser,
+  SignInButton,
+  SignUpButton,
+  UserButton,
+} from "@clerk/nextjs";
+import { useTheme as useNextThemes } from "next-themes";
+import { AboutPopup } from "@/components/(models)/about-popup";
 
 interface NavItem {
-  title: string
-  href: string
-  isAuthRequired?: boolean
+  title: string;
+  href: string;
+  isAuthRequired?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -34,17 +40,27 @@ const navItems: NavItem[] = [
     href: "/contact",
     isAuthRequired: false,
   },
-]
+];
 
 export function Header() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const pathname = usePathname()
-  const { isLoaded, isSignedIn } = useUser()
-  const { theme } = useNextThemes()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const { isLoaded, isSignedIn } = useUser();
+  const { theme } = useNextThemes();
 
   const logoSrc =
-    theme === "dark" ? "/leapkoders-logo-invert.png" : "/leapkoders-logo.png"
-  const homeLink = isSignedIn ? "/dashboard" : "/"
+    theme === "dark" ? "/leapkoders-logo-invert.gif" : "/leapkoders-logo.gif";
+  const homeLink = isSignedIn ? "/dashboard" : "/";
+
+  // Filter logic:
+  // - Hide "Home" when signed in (i.e. item.href === "/" should only show if not signed in)
+  // - Only show auth required items if the user is signed in
+  // - Always show items that do not require auth (except Home when signed in)
+  const filteredNavItems = navItems.filter((item) => {
+    if (item.href === "/") return !isSignedIn;
+    if (item.isAuthRequired) return isSignedIn;
+    return true;
+  });
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -54,35 +70,30 @@ export function Header() {
           <Image
             src={logoSrc || "/placeholder.svg"}
             alt="LeapKoders Logo"
-            width={40}
-            height={40}
+            width={80}
+            height={80}
+            unoptimized
             className="rounded-sm"
           />
-          <span className="hidden font-bold sm:inline-block">LeapKoders</span>
         </Link>
 
-        {/* Desktop Navigation - Right aligned with flex-1 to push it to the right */}
+        {/* Desktop Navigation - Right aligned */}
         <div className="flex-1 flex justify-end">
           <nav className="hidden md:flex items-center gap-6">
-            {navItems
-              .filter(
-                (item) =>
-                  !item.isAuthRequired || (item.isAuthRequired && isSignedIn)
-              )
-              .map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "text-sm font-medium transition-colors hover:text-primary",
-                    pathname === item.href
-                      ? "text-foreground"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  {item.title}
-                </Link>
-              ))}
+            {filteredNavItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary",
+                  pathname === item.href
+                    ? "text-foreground"
+                    : "text-muted-foreground"
+                )}
+              >
+                {item.title}
+              </Link>
+            ))}
 
             {/* About Popup for Desktop */}
             <AboutPopup
@@ -136,30 +147,28 @@ export function Header() {
         </div>
       </div>
 
+      {/* Separator with a small shadow */}
+      <Separator className="shadow-sm" />
+
       {/* Mobile Navigation */}
       {isMobileMenuOpen && (
         <div className="px-4 pb-6 md:hidden">
           <nav className="flex flex-col space-y-4">
-            {navItems
-              .filter(
-                (item) =>
-                  !item.isAuthRequired || (item.isAuthRequired && isSignedIn)
-              )
-              .map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "text-sm font-medium transition-colors hover:text-primary",
-                    pathname === item.href
-                      ? "text-foreground"
-                      : "text-muted-foreground"
-                  )}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.title}
-                </Link>
-              ))}
+            {filteredNavItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary",
+                  pathname === item.href
+                    ? "text-foreground"
+                    : "text-muted-foreground"
+                )}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {item.title}
+              </Link>
+            ))}
 
             {/* About Popup for Mobile */}
             <AboutPopup
@@ -191,5 +200,5 @@ export function Header() {
         </div>
       )}
     </header>
-  )
+  );
 }
