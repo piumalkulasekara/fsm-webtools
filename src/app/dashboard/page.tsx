@@ -1,11 +1,20 @@
 // src/app/dashboard/page.tsx
 
-export default function Dashboard() {
+"use client";
+
+import { Sidebar } from "@/components/sidebar";
+import { UserForm } from "@/components/user-form";
+
+export default function DashboardPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-        Dashboard
-      </h1>
+    <div className="flex h-screen">
+      <Sidebar />
+      <div className="flex-1 p-6 overflow-auto">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+        </div>
+        <UserForm />
+      </div>
     </div>
   );
 }
