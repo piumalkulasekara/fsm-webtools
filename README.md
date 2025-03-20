@@ -11,3 +11,5 @@ Piumal Kulasekara @LeapKoders Pvt. Ltd
 - [ ] Role Setup
 - [ ] License Setup
 - [ ] Add [Semantic Release](https://semantic-release.gitbook.io/semantic-release/)
+- [ ] Integrate [Resend](https://resend.com/home) for email handling
+- 
