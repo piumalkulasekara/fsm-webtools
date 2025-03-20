@@ -7,7 +7,7 @@ import {
   useMutation, 
   useQuery
 } from '@tanstack/react-query';
-import { apiClient, ApiError } from './api-client';
+import { apiClient, ApiError } from './client';
 
 /**
  * Default stale time for queries (5 minutes)

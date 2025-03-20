@@ -1,4 +1,4 @@
-import { getApiBaseUrl, getAuthHeader } from './api-config';
+import { getApiBaseUrl, getAuthHeader } from './config';
 
 /**
  * Error class for API requests

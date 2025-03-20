@@ -1,18 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { apiClient } from '@/lib/api-client';
-import { ODataResponse } from '@/lib/api-types';
+import { queryService } from '@/lib/api';
+import { errorHandler } from '@/lib/api';
 
 // Basic type for dropdown items
 interface DropdownItem {
   id: string;
   name: string;
-  [key: string]: unknown;
-}
-
-// Basic OData entity structure (extend as needed)
-interface ODataEntity {
-  Id?: string;
-  Name?: string;
   [key: string]: unknown;
 }
 
@@ -29,76 +22,35 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Missing dropdown type parameter' }, { status: 400 });
     }
     
-    let endpoint: string;
-    let transformFn: (data: ODataEntity[]) => DropdownItem[];
+    let queryId: string;
     
-    // Route to the correct endpoint based on dropdown type
+    // Map dropdown type to query ID
     switch (type) {
       case 'customers':
-        endpoint = 'Customers';
-        transformFn = transformCustomers;
+        queryId = 'dropdowns-customers';
         break;
       case 'products':
-        endpoint = 'Products';
-        transformFn = transformProducts;
+        queryId = 'dropdowns-products';
         break;
       case 'locations':
-        endpoint = 'Locations';
-        transformFn = transformLocations;
+        queryId = 'dropdowns-locations';
         break;
       default:
         return NextResponse.json({ error: 'Invalid dropdown type' }, { status: 400 });
     }
     
-    // Fetch data from OData
+    // Execute the query using our new query service
     const queryParams = { 
-      $top: '100', // Limit to 100 items
-      $orderby: 'Name'
+      limit: searchParams.get('limit') || '100',
     };
     
-    const response = await apiClient.get<ODataResponse<ODataEntity>>(endpoint, queryParams);
+    const result = await queryService.executeQueryById<DropdownItem>(queryId, queryParams);
     
-    // Transform the data for dropdown consumption
-    const items = transformFn(response.value);
-    
+    // Return the items
     return NextResponse.json({
-      items
+      items: result.results
     }, { status: 200 });
   } catch (error) {
-    console.error('Dropdown data fetch error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch dropdown data' },
-      { status: 500 }
-    );
+    return errorHandler.handleError(error);
   }
-}
-
-/**
- * Transform customer data for dropdown usage
- */
-function transformCustomers(data: ODataEntity[]): DropdownItem[] {
-  return data.map(item => ({
-    id: item.CustomerId as string || item.Id as string,
-    name: item.Name as string,
-  }));
-}
-
-/**
- * Transform product data for dropdown usage
- */
-function transformProducts(data: ODataEntity[]): DropdownItem[] {
-  return data.map(item => ({
-    id: item.ProductId as string || item.Id as string,
-    name: item.Name as string,
-  }));
-}
-
-/**
- * Transform location data for dropdown usage
- */
-function transformLocations(data: ODataEntity[]): DropdownItem[] {
-  return data.map(item => ({
-    id: item.LocationId as string || item.Id as string,
-    name: item.Name as string,
-  }));
 } 
