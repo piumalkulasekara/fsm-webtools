@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
+import { MultiSelect, MultiSelectOption } from "@/components/ui/multi-select";
 
 // Define form schema for validation
 const formSchema = z.object({
@@ -37,7 +38,7 @@ const formSchema = z.object({
   dispatchable: z.boolean().default(false),
   schedulingResource: z.boolean().default(false),
   psoSystemUser: z.boolean().default(false),
-  role: z.string().optional(),
+  roles: z.array(z.string()).default([]),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -116,7 +117,7 @@ const fsmLicenseOptions: ComboboxOption[] = [
   { value: "studio", label: "STUDIO" },
 ];
 
-const roleOptions: ComboboxOption[] = [
+const roleOptions: MultiSelectOption[] = [
   { value: "role-admin", label: "Administrator" },
   { value: "role-manager", label: "Manager" },
   { value: "role-technician", label: "Technician" },
@@ -162,7 +163,7 @@ export function UserForm() {
       dispatchable: false,
       schedulingResource: false,
       psoSystemUser: false,
-      role: "",
+      roles: [],
     },
   });
 
@@ -181,6 +182,11 @@ export function UserForm() {
       setValue("contractPostGroup", value);
       setValue("requestPostGroup", value);
     }
+  };
+
+  // Function to handle multi-select changes
+  const handleMultiSelectChange = (field: keyof FormValues, values: string[]) => {
+    setValue(field, values, { shouldValidate: true });
   };
 
   return (
@@ -526,16 +532,17 @@ export function UserForm() {
             <div className="h-px bg-border my-2"></div>
             
             <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Combobox
+              <Label htmlFor="roles">Roles</Label>
+              <MultiSelect
                 options={roleOptions}
-                value={watch("role") || ""}
-                onValueChange={(value) => handleComboboxChange("role", value)}
-                placeholder="Select Role"
+                values={watch("roles") || []}
+                onValuesChange={(values) => handleMultiSelectChange("roles", values)}
+                placeholder="Select Roles"
                 searchPlaceholder="Search roles..."
+                badgeVariant="secondary"
               />
-              {errors.role && (
-                <p className="text-sm text-destructive">{errors.role.message}</p>
+              {errors.roles && (
+                <p className="text-sm text-destructive">{errors.roles.message}</p>
               )}
             </div>
           </div>
