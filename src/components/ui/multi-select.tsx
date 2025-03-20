@@ -26,6 +26,7 @@ interface MultiSelectProps {
   className?: string;
   searchPlaceholder?: string;
   badgeVariant?: "default" | "secondary" | "destructive" | "outline";
+  closeOnSelect?: boolean;
 }
 
 export function MultiSelect({
@@ -37,6 +38,7 @@ export function MultiSelect({
   className,
   searchPlaceholder = "Search...",
   badgeVariant = "secondary",
+  closeOnSelect = false,
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -61,11 +63,12 @@ export function MultiSelect({
     }
   }, [open]);
 
-  // Handle adding an option
+  // Handle selecting an option
   const handleSelect = (value: string) => {
-    if (!values.includes(value)) {
-      const newValues = [...values, value];
-      onValuesChange(newValues);
+    const newValues = [...values, value];
+    onValuesChange(newValues);
+    if (closeOnSelect) {
+      setOpen(false);
       setSearchQuery("");
     }
   };

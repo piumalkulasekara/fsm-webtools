@@ -670,6 +670,7 @@ export function UserForm() {
                 placeholder="Select Roles"
                 searchPlaceholder="Search roles..."
                 badgeVariant="secondary"
+                closeOnSelect={true}
               />
               {errors.roles && (
                 <p className="text-sm text-destructive">{errors.roles.message}</p>
