@@ -21,7 +21,7 @@ const formSchema = z.object({
   email: z.string().email("Invalid email address"),
   sso: z.boolean().default(false),
   language: z.string().optional(),
-  lcNameNumber: z.string().optional(),
+  lelyCenter: z.string().optional(),
   allocatedTeam: z.string().optional(),
   employee: z.boolean().default(false),
   jobTitle: z.string().optional(),
@@ -30,6 +30,14 @@ const formSchema = z.object({
   currency: z.string().optional(),
   technicianIdMX: z.string().min(1, "Technician ID (MX) is required"),
   personGroup: z.string().optional(),
+  contractPostGroup: z.string().optional(),
+  requestPostGroup: z.string().optional(),
+  fsmLicense: z.string().optional(),
+  mobileUser: z.boolean().default(false),
+  dispatchable: z.boolean().default(false),
+  schedulingResource: z.boolean().default(false),
+  psoSystemUser: z.boolean().default(false),
+  role: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -82,9 +90,45 @@ const personGroupOptions: ComboboxOption[] = [
   { value: "contractors", label: "Contractors" },
 ];
 
+// Shared options for Lely Center, Contract Post Group, and Request Post Group
+const sharedGroupOptions: ComboboxOption[] = [
+  { value: "lc-northeast", label: "Lely Center Northeast" },
+  { value: "lc-southeast", label: "Lely Center Southeast" },
+  { value: "lc-midwest", label: "Lely Center Midwest" },
+  { value: "lc-southwest", label: "Lely Center Southwest" },
+  { value: "lc-northwest", label: "Lely Center Northwest" },
+  { value: "lc-central", label: "Lely Center Central" },
+];
+
+const allocatedTeamOptions: ComboboxOption[] = [
+  { value: "team-service", label: "Service Team" },
+  { value: "team-sales", label: "Sales Team" },
+  { value: "team-support", label: "Support Team" },
+  { value: "team-admin", label: "Administrative Team" },
+  { value: "team-management", label: "Management Team" },
+  { value: "team-development", label: "Development Team" },
+];
+
+const fsmLicenseOptions: ComboboxOption[] = [
+  { value: "mobile", label: "MOBILE" },
+  { value: "message", label: "MESSAGE" },
+  { value: "named", label: "NAMED" },
+  { value: "studio", label: "STUDIO" },
+];
+
+const roleOptions: ComboboxOption[] = [
+  { value: "role-admin", label: "Administrator" },
+  { value: "role-manager", label: "Manager" },
+  { value: "role-technician", label: "Technician" },
+  { value: "role-dispatcher", label: "Dispatcher" },
+  { value: "role-planner", label: "Planner" },
+  { value: "role-support", label: "Support Agent" },
+];
+
 export function UserForm() {
   const [generalInfoExpanded, setGeneralInfoExpanded] = useState(true);
   const [teamDetailsExpanded, setTeamDetailsExpanded] = useState(true);
+  const [rolesLicenseExpanded, setRolesLicenseExpanded] = useState(true);
 
   const {
     register,
@@ -102,7 +146,7 @@ export function UserForm() {
       email: "",
       sso: false,
       language: "",
-      lcNameNumber: "",
+      lelyCenter: "",
       allocatedTeam: "",
       employee: false,
       jobTitle: "",
@@ -111,6 +155,14 @@ export function UserForm() {
       currency: "",
       technicianIdMX: "",
       personGroup: "",
+      contractPostGroup: "",
+      requestPostGroup: "",
+      fsmLicense: "",
+      mobileUser: false,
+      dispatchable: false,
+      schedulingResource: false,
+      psoSystemUser: false,
+      role: "",
     },
   });
 
@@ -122,6 +174,13 @@ export function UserForm() {
   // Function to handle combobox changes
   const handleComboboxChange = (field: keyof FormValues, value: string) => {
     setValue(field, value, { shouldValidate: true });
+    
+    // Update Contract Post Group and Request Post Group when Lely Center changes
+    if (field === "lelyCenter" && value) {
+      // Set the same value to all three dropdowns
+      setValue("contractPostGroup", value);
+      setValue("requestPostGroup", value);
+    }
   };
 
   return (
@@ -335,23 +394,149 @@ export function UserForm() {
         </div>
         
         {teamDetailsExpanded && (
-          <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="lcNameNumber">LC Name/Number</Label>
-              <Input 
-                id="lcNameNumber"
-                placeholder="LC Name/Number"
-                {...register("lcNameNumber")}
-              />
+          <div className="p-4 grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="lelyCenter">Lely Center (Access Group)</Label>
+                <Combobox
+                  options={sharedGroupOptions}
+                  value={watch("lelyCenter") || ""}
+                  onValueChange={(value) => handleComboboxChange("lelyCenter", value)}
+                  placeholder="Select Lely Center"
+                  searchPlaceholder="Search Lely Center..."
+                />
+                {errors.lelyCenter && (
+                  <p className="text-sm text-destructive">{errors.lelyCenter.message}</p>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="contractPostGroup">Contract Post Group</Label>
+                <Combobox
+                  options={sharedGroupOptions}
+                  value={watch("contractPostGroup") || ""}
+                  onValueChange={(value) => handleComboboxChange("contractPostGroup", value)}
+                  placeholder="Select Contract Post Group"
+                  searchPlaceholder="Search Contract Post Group..."
+                />
+                {errors.contractPostGroup && (
+                  <p className="text-sm text-destructive">{errors.contractPostGroup.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="requestPostGroup">Request Post Group</Label>
+                <Combobox
+                  options={sharedGroupOptions}
+                  value={watch("requestPostGroup") || ""}
+                  onValueChange={(value) => handleComboboxChange("requestPostGroup", value)}
+                  placeholder="Select Request Post Group"
+                  searchPlaceholder="Search Request Post Group..."
+                />
+                {errors.requestPostGroup && (
+                  <p className="text-sm text-destructive">{errors.requestPostGroup.message}</p>
+                )}
+              </div>
             </div>
+            
+            {/* Divider */}
+            <div className="h-px bg-border my-2"></div>
             
             <div className="space-y-2">
               <Label htmlFor="allocatedTeam">Allocated Team</Label>
-              <Input 
-                id="allocatedTeam"
-                placeholder="Allocated Team"
-                {...register("allocatedTeam")}
+              <Combobox
+                options={allocatedTeamOptions}
+                value={watch("allocatedTeam") || ""}
+                onValueChange={(value) => handleComboboxChange("allocatedTeam", value)}
+                placeholder="Select Allocated Team"
+                searchPlaceholder="Search Allocated Team..."
               />
+              {errors.allocatedTeam && (
+                <p className="text-sm text-destructive">{errors.allocatedTeam.message}</p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Roles and License Setup */}
+      <div className="rounded-md border">
+        <div 
+          className="flex items-center justify-between bg-muted/50 px-4 py-3 cursor-pointer"
+          onClick={() => setRolesLicenseExpanded(!rolesLicenseExpanded)}
+        >
+          <h3 className="text-md font-medium">Roles and License Setup</h3>
+          <ChevronDown className={cn(
+            "h-5 w-5 transition-transform",
+            rolesLicenseExpanded ? "rotate-180" : ""
+          )} />
+        </div>
+        
+        {rolesLicenseExpanded && (
+          <div className="p-4 grid grid-cols-1 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="fsmLicense">FSM License</Label>
+              <Combobox
+                options={fsmLicenseOptions}
+                value={watch("fsmLicense") || ""}
+                onValueChange={(value) => handleComboboxChange("fsmLicense", value)}
+                placeholder="Select FSM License"
+                searchPlaceholder="Search license types..."
+              />
+              {errors.fsmLicense && (
+                <p className="text-sm text-destructive">{errors.fsmLicense.message}</p>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="mobileUser"
+                  {...register("mobileUser")}
+                />
+                <Label htmlFor="mobileUser" className="ml-2">Mobile User</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="dispatchable"
+                  {...register("dispatchable")}
+                />
+                <Label htmlFor="dispatchable" className="ml-2">Dispatchable</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="schedulingResource"
+                  {...register("schedulingResource")}
+                />
+                <Label htmlFor="schedulingResource" className="ml-2">Scheduling Resource</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="psoSystemUser"
+                  {...register("psoSystemUser")}
+                />
+                <Label htmlFor="psoSystemUser" className="ml-2">PSO System User</Label>
+              </div>
+            </div>
+            
+            {/* Divider */}
+            <div className="h-px bg-border my-2"></div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Combobox
+                options={roleOptions}
+                value={watch("role") || ""}
+                onValueChange={(value) => handleComboboxChange("role", value)}
+                placeholder="Select Role"
+                searchPlaceholder="Search roles..."
+              />
+              {errors.role && (
+                <p className="text-sm text-destructive">{errors.role.message}</p>
+              )}
             </div>
           </div>
         )}

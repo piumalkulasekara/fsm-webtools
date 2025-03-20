@@ -38,6 +38,8 @@ export function Combobox({
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const [width, setWidth] = React.useState<number | undefined>(undefined);
   
   // Ensure options is always an array
   const safeOptions = Array.isArray(options) ? options : [];
@@ -50,10 +52,18 @@ export function Combobox({
     );
   }, [safeOptions, searchQuery]);
 
+  // Update width when the dropdown opens
+  React.useEffect(() => {
+    if (open && triggerRef.current) {
+      setWidth(triggerRef.current.offsetWidth);
+    }
+  }, [open]);
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          ref={triggerRef}
           variant="outline"
           role="combobox"
           aria-expanded={open}
@@ -65,7 +75,11 @@ export function Combobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
+      <PopoverContent 
+        className="p-0" 
+        style={{ width: width ? `${width}px` : undefined }}
+        align="start"
+      >
         <div className="flex items-center border-b px-3 py-2">
           <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
           <Input
