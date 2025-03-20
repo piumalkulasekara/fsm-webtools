@@ -17,10 +17,6 @@ export function Sidebar({ className }: SidebarProps) {
 
   const navigationItems = [
     {
-      title: "Dashboard",
-      href: "/dashboard",
-    },
-    {
       title: "User Account Creations",
       href: "/dashboard/user-accounts",
     },

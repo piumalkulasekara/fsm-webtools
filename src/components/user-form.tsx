@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 const formSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  fsUserId: z.string().optional(),
+  ifsUserId: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().email("Invalid email address"),
   sso: z.boolean().default(false),
@@ -39,7 +39,7 @@ export function UserForm() {
     defaultValues: {
       firstName: "",
       lastName: "",
-      fsUserId: "",
+      ifsUserId: "",
       phone: "",
       email: "",
       sso: false,
@@ -100,12 +100,12 @@ export function UserForm() {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="fsUserId">FS User ID (readonly field)</Label>
+              <Label htmlFor="ifsUserId">IFS User ID (readonly field)</Label>
               <Input 
-                id="fsUserId"
-                placeholder="FS User ID"
+                id="ifsUserId"
+                placeholder="IFS User ID"
                 readOnly
-                {...register("fsUserId")}
+                {...register("ifsUserId")}
               />
             </div>
             
@@ -118,27 +118,31 @@ export function UserForm() {
               />
             </div>
             
-            <div className="space-y-2">
+            {/* Email Field */}
+            <div className="space-y-2 col-span-1">
               <Label htmlFor="email">
                 Email Address <span className="text-red-500">*</span>
               </Label>
-              <Input 
-                id="email"
-                type="email"
-                placeholder="Email Address"
-                {...register("email")}
-              />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
-              )}
-            </div>
-            
-            <div className="flex items-center space-x-2 h-full mt-8">
-              <Checkbox
-                id="sso"
-                {...register("sso")}
-              />
-              <Label htmlFor="sso">SSO</Label>
+              <div className="flex items-start space-x-4">
+                <div className="flex-grow">
+                  <Input 
+                    id="email"
+                    type="email"
+                    placeholder="Email Address"
+                    {...register("email")}
+                  />
+                  {errors.email && (
+                    <p className="text-sm text-destructive">{errors.email.message}</p>
+                  )}
+                </div>
+                <div className="flex items-center mt-1 space-x-2 min-w-[80px]">
+                  <Checkbox
+                    id="sso"
+                    {...register("sso")}
+                  />
+                  <Label htmlFor="sso" className="ml-2">SSO</Label>
+                </div>
+              </div>
             </div>
             
             <div className="space-y-2">
