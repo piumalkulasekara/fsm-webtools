@@ -6,7 +6,7 @@ import { ClerkProvider } from "@clerk/nextjs"
 import { Header } from "@/components/header"
 import { Toaster } from "@/components/ui/sonner"
 import { Providers } from "@/app/_providers/providers"
-
+import { SpeedInsights } from '@vercel/speed-insights/next';
 // Optimize fonts with display: swap for better performance
 const sourceSansPro = Source_Sans_3({
   variable: "--font-source-sans",
@@ -68,6 +68,7 @@ export default function RootLayout({
               <Header />
               <main>{children}</main>
               <Toaster />
+              <SpeedInsights />
             </Providers>
           </ClerkProvider>
         </ThemeProvider>
