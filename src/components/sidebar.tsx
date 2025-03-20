@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, memo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -19,11 +19,49 @@ interface SidebarProps {
   className?: string;
 }
 
+interface NavItem {
+  title: string;
+  href: string;
+  icon: React.ElementType;
+}
+
+// Memoized navigation item component for better performance
+const NavItem = memo(({ 
+  item, 
+  isActive, 
+  collapsed 
+}: { 
+  item: NavItem; 
+  isActive: boolean; 
+  collapsed: boolean;
+}) => {
+  const Icon = item.icon;
+  
+  return (
+    <Link
+      key={item.href}
+      href={item.href}
+      className={cn(
+        "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
+        isActive
+          ? "bg-primary text-primary-foreground"
+          : "hover:bg-muted",
+        collapsed ? "justify-center" : "justify-start"
+      )}
+    >
+      <Icon className={cn("h-5 w-5", collapsed ? "" : "mr-2")} />
+      {!collapsed && <span>{item.title}</span>}
+    </Link>
+  );
+});
+NavItem.displayName = "NavItem";
+
 export function Sidebar({ className }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
 
-  const navigationItems = [
+  // Memoize navigation items to prevent unnecessary re-renders
+  const navigationItems = useMemo<NavItem[]>(() => [
     {
       title: "User Account Creations",
       href: "/dashboard/user-accounts",
@@ -39,7 +77,7 @@ export function Sidebar({ className }: SidebarProps) {
       href: "/dashboard/team-editor",
       icon: UsersIcon,
     },
-  ];
+  ], []);
 
   return (
     <div
@@ -65,25 +103,14 @@ export function Sidebar({ className }: SidebarProps) {
         </Button>
       </div>
       <nav className="flex flex-col gap-2 px-2">
-        {navigationItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                pathname === item.href
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-muted",
-                collapsed ? "justify-center" : "justify-start"
-              )}
-            >
-              <Icon className={cn("h-5 w-5", collapsed ? "" : "mr-2")} />
-              {!collapsed && <span>{item.title}</span>}
-            </Link>
-          );
-        })}
+        {navigationItems.map((item) => (
+          <NavItem 
+            key={item.href}
+            item={item} 
+            isActive={pathname === item.href}
+            collapsed={collapsed}
+          />
+        ))}
       </nav>
       {!collapsed && (
         <div className="mt-auto p-4">
