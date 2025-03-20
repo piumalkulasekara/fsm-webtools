@@ -33,6 +33,11 @@ const formSchema = z.object({
   personGroup: z.string().optional(),
   contractPostGroup: z.string().optional(),
   requestPostGroup: z.string().optional(),
+  startWorkFrom: z.string().optional(),
+  worksFromPlace: z.string().optional(),
+  endsWorkAt: z.string().optional(),
+  placeForStock: z.string().optional(),
+  stockLocation: z.string().optional(),
   fsmLicense: z.string().optional(),
   mobileUser: z.boolean().default(false),
   dispatchable: z.boolean().default(false),
@@ -110,6 +115,23 @@ const allocatedTeamOptions: ComboboxOption[] = [
   { value: "team-development", label: "Development Team" },
 ];
 
+const placesOptions: ComboboxOption[] = [
+  { value: "place-hq", label: "Headquarters" },
+  { value: "place-warehouse", label: "Warehouse" },
+  { value: "place-distribution", label: "Distribution Center" },
+  { value: "place-service-center", label: "Service Center" },
+  { value: "place-field-office", label: "Field Office" },
+  { value: "place-customer-site", label: "Customer Site" },
+];
+
+const locationOptions: ComboboxOption[] = [
+  { value: "loc-main", label: "Main" },
+  { value: "loc-secondary", label: "Secondary" },
+  { value: "loc-storage", label: "Storage" },
+  { value: "loc-field", label: "Field" },
+  { value: "loc-temporary", label: "Temporary" },
+];
+
 const fsmLicenseOptions: ComboboxOption[] = [
   { value: "mobile", label: "MOBILE" },
   { value: "message", label: "MESSAGE" },
@@ -125,6 +147,12 @@ const roleOptions: MultiSelectOption[] = [
   { value: "role-planner", label: "Planner" },
   { value: "role-support", label: "Support Agent" },
 ];
+
+// Custom styles for the combobox
+const comboboxStyles = "w-full text-muted-foreground font-normal";
+
+// Custom styles for placeholders
+const placeholderStyles = "text-muted-foreground/70 italic text-sm";
 
 export function UserForm() {
   const [generalInfoExpanded, setGeneralInfoExpanded] = useState(true);
@@ -158,6 +186,11 @@ export function UserForm() {
       personGroup: "",
       contractPostGroup: "",
       requestPostGroup: "",
+      startWorkFrom: "",
+      worksFromPlace: "",
+      endsWorkAt: "",
+      placeForStock: "",
+      stockLocation: "",
       fsmLicense: "",
       mobileUser: false,
       dispatchable: false,
@@ -182,6 +215,11 @@ export function UserForm() {
       setValue("contractPostGroup", value);
       setValue("requestPostGroup", value);
     }
+  };
+
+  // Function to get the placeholder class
+  const getPlaceholderClass = (value: string | undefined) => {
+    return !value ? placeholderStyles : "";
   };
 
   // Function to handle multi-select changes
@@ -363,6 +401,7 @@ export function UserForm() {
                 onValueChange={(value) => handleComboboxChange("language", value)}
                 placeholder="Select language"
                 searchPlaceholder="Search language..."
+                className={cn(comboboxStyles, getPlaceholderClass(watch("language")))}
               />
               {errors.language && (
                 <p className="text-sm text-destructive">{errors.language.message}</p>
@@ -410,6 +449,7 @@ export function UserForm() {
                   onValueChange={(value) => handleComboboxChange("lelyCenter", value)}
                   placeholder="Select Lely Center"
                   searchPlaceholder="Search Lely Center..."
+                  className={cn(comboboxStyles, getPlaceholderClass(watch("lelyCenter")))}
                 />
                 {errors.lelyCenter && (
                   <p className="text-sm text-destructive">{errors.lelyCenter.message}</p>
@@ -424,6 +464,7 @@ export function UserForm() {
                   onValueChange={(value) => handleComboboxChange("contractPostGroup", value)}
                   placeholder="Select Contract Post Group"
                   searchPlaceholder="Search Contract Post Group..."
+                  className={cn(comboboxStyles, getPlaceholderClass(watch("contractPostGroup")))}
                 />
                 {errors.contractPostGroup && (
                   <p className="text-sm text-destructive">{errors.contractPostGroup.message}</p>
@@ -438,6 +479,7 @@ export function UserForm() {
                   onValueChange={(value) => handleComboboxChange("requestPostGroup", value)}
                   placeholder="Select Request Post Group"
                   searchPlaceholder="Search Request Post Group..."
+                  className={cn(comboboxStyles, getPlaceholderClass(watch("requestPostGroup")))}
                 />
                 {errors.requestPostGroup && (
                   <p className="text-sm text-destructive">{errors.requestPostGroup.message}</p>
@@ -456,10 +498,97 @@ export function UserForm() {
                 onValueChange={(value) => handleComboboxChange("allocatedTeam", value)}
                 placeholder="Select Allocated Team"
                 searchPlaceholder="Search Allocated Team..."
+                className={cn(comboboxStyles, getPlaceholderClass(watch("allocatedTeam")))}
               />
               {errors.allocatedTeam && (
                 <p className="text-sm text-destructive">{errors.allocatedTeam.message}</p>
               )}
+            </div>
+            
+            {/* New Divider after Allocated Team */}
+            <div className="h-px bg-border my-2"></div>
+            
+            {/* Places Section */}
+            <div className="space-y-4 p-3 bg-muted/30 rounded-md">
+              <h4 className="font-medium text-muted-foreground/90 border-l-4 border-primary/40 pl-2">Places</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="startWorkFrom">Start Work From</Label>
+                  <Combobox
+                    options={placesOptions}
+                    value={watch("startWorkFrom") || ""}
+                    onValueChange={(value) => handleComboboxChange("startWorkFrom", value)}
+                    placeholder="Select Starting Place"
+                    searchPlaceholder="Search places..."
+                    className={cn(comboboxStyles, getPlaceholderClass(watch("startWorkFrom")))}
+                  />
+                  {errors.startWorkFrom && (
+                    <p className="text-sm text-destructive">{errors.startWorkFrom.message}</p>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="worksFromPlace">Works From Place</Label>
+                  <Combobox
+                    options={placesOptions}
+                    value={watch("worksFromPlace") || ""}
+                    onValueChange={(value) => handleComboboxChange("worksFromPlace", value)}
+                    placeholder="Select Work Place"
+                    searchPlaceholder="Search places..."
+                    className={cn(comboboxStyles, getPlaceholderClass(watch("worksFromPlace")))}
+                  />
+                  {errors.worksFromPlace && (
+                    <p className="text-sm text-destructive">{errors.worksFromPlace.message}</p>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="endsWorkAt">Ends Work At</Label>
+                  <Combobox
+                    options={placesOptions}
+                    value={watch("endsWorkAt") || ""}
+                    onValueChange={(value) => handleComboboxChange("endsWorkAt", value)}
+                    placeholder="Select Ending Place"
+                    searchPlaceholder="Search places..."
+                    className={cn(comboboxStyles, getPlaceholderClass(watch("endsWorkAt")))}
+                  />
+                  {errors.endsWorkAt && (
+                    <p className="text-sm text-destructive">{errors.endsWorkAt.message}</p>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="placeForStock">Place for Stock</Label>
+                  <div className="grid grid-cols-12 gap-2">
+                    <div className="col-span-7">
+                      <Combobox
+                        options={placesOptions}
+                        value={watch("placeForStock") || ""}
+                        onValueChange={(value) => handleComboboxChange("placeForStock", value)}
+                        placeholder="Select Stock Place"
+                        searchPlaceholder="Search places..."
+                        className={cn(comboboxStyles, getPlaceholderClass(watch("placeForStock")))}
+                      />
+                      {errors.placeForStock && (
+                        <p className="text-sm text-destructive">{errors.placeForStock.message}</p>
+                      )}
+                    </div>
+                    <div className="col-span-5">
+                      <Combobox
+                        options={locationOptions}
+                        value={watch("stockLocation") || ""}
+                        onValueChange={(value) => handleComboboxChange("stockLocation", value)}
+                        placeholder="Location"
+                        searchPlaceholder="Search locations..."
+                        className={cn(comboboxStyles, getPlaceholderClass(watch("stockLocation")))}
+                      />
+                      {errors.stockLocation && (
+                        <p className="text-sm text-destructive">{errors.stockLocation.message}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -488,6 +617,7 @@ export function UserForm() {
                 onValueChange={(value) => handleComboboxChange("fsmLicense", value)}
                 placeholder="Select FSM License"
                 searchPlaceholder="Search license types..."
+                className={cn(comboboxStyles, getPlaceholderClass(watch("fsmLicense")))}
               />
               {errors.fsmLicense && (
                 <p className="text-sm text-destructive">{errors.fsmLicense.message}</p>
