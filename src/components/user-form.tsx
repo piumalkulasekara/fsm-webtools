@@ -10,6 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Define form schema for validation
 const formSchema = z.object({
@@ -22,6 +29,11 @@ const formSchema = z.object({
   language: z.string().optional(),
   lcNameNumber: z.string().optional(),
   allocatedTeam: z.string().optional(),
+  employee: z.boolean().default(false),
+  jobTitle: z.string().optional(),
+  personStatus: z.enum(["Active", "Inactive"]).default("Active"),
+  type: z.enum(["Business Support", "Administrator", "Dispatcher", "Technician"]).default("Business Support"),
+  currency: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -34,6 +46,8 @@ export function UserForm() {
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
+    watch,
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -46,12 +60,29 @@ export function UserForm() {
       language: "",
       lcNameNumber: "",
       allocatedTeam: "",
+      employee: false,
+      jobTitle: "",
+      personStatus: "Active",
+      type: "Business Support",
+      currency: "",
     },
   });
 
   const onSubmit = (data: FormValues) => {
     console.log("Form submitted with values:", data);
     // In a real app, this would submit the form to your API
+  };
+
+  // Function to handle select changes with proper typing
+  const handleSelectChange = (field: keyof FormValues, value: string) => {
+    // Cast the value to the appropriate type based on the field
+    if (field === "personStatus") {
+      setValue(field, value as "Active" | "Inactive", { shouldValidate: true });
+    } else if (field === "type") {
+      setValue(field, value as "Business Support" | "Administrator" | "Dispatcher" | "Technician", { shouldValidate: true });
+    } else {
+      setValue(field, value, { shouldValidate: true });
+    }
   };
 
   return (
@@ -144,6 +175,59 @@ export function UserForm() {
                 </div>
               </div>
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="jobTitle">Job Title</Label>
+              <Input 
+                id="jobTitle"
+                placeholder="Job Title"
+                {...register("jobTitle")}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="personStatus">Person Status</Label>
+              <Select 
+                defaultValue={watch("personStatus")} 
+                onValueChange={(value: string) => handleSelectChange("personStatus", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="type">Type</Label>
+              <Select 
+                defaultValue={watch("type")} 
+                onValueChange={(value: string) => handleSelectChange("type", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Business Support">Business Support</SelectItem>
+                  <SelectItem value="Administrator">Administrator</SelectItem>
+                  <SelectItem value="Dispatcher">Dispatcher</SelectItem>
+                  <SelectItem value="Technician">Technician</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2 flex items-center h-full">
+              <div className="flex items-center space-x-2 mt-8">
+                <Checkbox
+                  id="employee"
+                  {...register("employee")}
+                />
+                <Label htmlFor="employee" className="ml-2">Employee</Label>
+              </div>
+            </div>
             
             <div className="space-y-2">
               <Label htmlFor="language">Language</Label>
@@ -152,6 +236,25 @@ export function UserForm() {
                 placeholder="Language"
                 {...register("language")}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="currency">Currency</Label>
+              <Select 
+                defaultValue={watch("currency") || ""} 
+                onValueChange={(value: string) => handleSelectChange("currency", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="EUR">EUR</SelectItem>
+                  <SelectItem value="GBP">GBP</SelectItem>
+                  <SelectItem value="CAD">CAD</SelectItem>
+                  <SelectItem value="AUD">AUD</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         )}
