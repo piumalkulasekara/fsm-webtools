@@ -10,13 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 
 // Define form schema for validation
 const formSchema = z.object({
@@ -31,12 +25,62 @@ const formSchema = z.object({
   allocatedTeam: z.string().optional(),
   employee: z.boolean().default(false),
   jobTitle: z.string().optional(),
-  personStatus: z.enum(["Active", "Inactive"]).default("Active"),
-  type: z.enum(["Business Support", "Administrator", "Dispatcher", "Technician"]).default("Business Support"),
+  personStatus: z.string().default("active"),
+  type: z.string().default("business-support"),
   currency: z.string().optional(),
+  technicianIdMX: z.string().min(1, "Technician ID (MX) is required"),
+  personGroup: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
+
+// Define dropdown options
+const languageOptions: ComboboxOption[] = [
+  { value: "en", label: "English" },
+  { value: "es", label: "Spanish" },
+  { value: "fr", label: "French" },
+  { value: "de", label: "German" },
+  { value: "it", label: "Italian" },
+  { value: "pt", label: "Portuguese" },
+  { value: "ru", label: "Russian" },
+  { value: "zh", label: "Chinese" },
+  { value: "ja", label: "Japanese" },
+  { value: "ar", label: "Arabic" },
+];
+
+const personStatusOptions: ComboboxOption[] = [
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+];
+
+const typeOptions: ComboboxOption[] = [
+  { value: "business-support", label: "Business Support" },
+  { value: "administrator", label: "Administrator" },
+  { value: "dispatcher", label: "Dispatcher" },
+  { value: "technician", label: "Technician" },
+];
+
+const currencyOptions: ComboboxOption[] = [
+  { value: "USD", label: "USD - US Dollar" },
+  { value: "EUR", label: "EUR - Euro" },
+  { value: "GBP", label: "GBP - British Pound" },
+  { value: "CAD", label: "CAD - Canadian Dollar" },
+  { value: "AUD", label: "AUD - Australian Dollar" },
+  { value: "JPY", label: "JPY - Japanese Yen" },
+  { value: "CNY", label: "CNY - Chinese Yuan" },
+  { value: "INR", label: "INR - Indian Rupee" },
+  { value: "BRL", label: "BRL - Brazilian Real" },
+  { value: "MXN", label: "MXN - Mexican Peso" },
+];
+
+const personGroupOptions: ComboboxOption[] = [
+  { value: "managers", label: "Managers" },
+  { value: "supervisors", label: "Supervisors" },
+  { value: "field-technicians", label: "Field Technicians" },
+  { value: "administrative", label: "Administrative" },
+  { value: "support-staff", label: "Support Staff" },
+  { value: "contractors", label: "Contractors" },
+];
 
 export function UserForm() {
   const [generalInfoExpanded, setGeneralInfoExpanded] = useState(true);
@@ -62,9 +106,11 @@ export function UserForm() {
       allocatedTeam: "",
       employee: false,
       jobTitle: "",
-      personStatus: "Active",
-      type: "Business Support",
+      personStatus: "active",
+      type: "business-support",
       currency: "",
+      technicianIdMX: "",
+      personGroup: "",
     },
   });
 
@@ -73,16 +119,9 @@ export function UserForm() {
     // In a real app, this would submit the form to your API
   };
 
-  // Function to handle select changes with proper typing
-  const handleSelectChange = (field: keyof FormValues, value: string) => {
-    // Cast the value to the appropriate type based on the field
-    if (field === "personStatus") {
-      setValue(field, value as "Active" | "Inactive", { shouldValidate: true });
-    } else if (field === "type") {
-      setValue(field, value as "Business Support" | "Administrator" | "Dispatcher" | "Technician", { shouldValidate: true });
-    } else {
-      setValue(field, value, { shouldValidate: true });
-    }
+  // Function to handle combobox changes
+  const handleComboboxChange = (field: keyof FormValues, value: string) => {
+    setValue(field, value, { shouldValidate: true });
   };
 
   return (
@@ -177,6 +216,20 @@ export function UserForm() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="technicianIdMX">
+                Technician ID (MX) <span className="text-red-500">*</span>
+              </Label>
+              <Input 
+                id="technicianIdMX"
+                placeholder="Technician ID (MX)"
+                {...register("technicianIdMX")}
+              />
+              {errors.technicianIdMX && (
+                <p className="text-sm text-destructive">{errors.technicianIdMX.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="jobTitle">Job Title</Label>
               <Input 
                 id="jobTitle"
@@ -186,37 +239,45 @@ export function UserForm() {
             </div>
             
             <div className="space-y-2">
+              <Label htmlFor="personGroup">Person Group</Label>
+              <Combobox
+                options={personGroupOptions}
+                value={watch("personGroup") || ""}
+                onValueChange={(value) => handleComboboxChange("personGroup", value)}
+                placeholder="Select person group"
+                searchPlaceholder="Search person group..."
+              />
+              {errors.personGroup && (
+                <p className="text-sm text-destructive">{errors.personGroup.message}</p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
               <Label htmlFor="personStatus">Person Status</Label>
-              <Select 
-                defaultValue={watch("personStatus")} 
-                onValueChange={(value: string) => handleSelectChange("personStatus", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
+              <Combobox
+                options={personStatusOptions}
+                value={watch("personStatus")}
+                onValueChange={(value) => handleComboboxChange("personStatus", value)}
+                placeholder="Select status"
+                searchPlaceholder="Search status..."
+              />
+              {errors.personStatus && (
+                <p className="text-sm text-destructive">{errors.personStatus.message}</p>
+              )}
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="type">Type</Label>
-              <Select 
-                defaultValue={watch("type")} 
-                onValueChange={(value: string) => handleSelectChange("type", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Business Support">Business Support</SelectItem>
-                  <SelectItem value="Administrator">Administrator</SelectItem>
-                  <SelectItem value="Dispatcher">Dispatcher</SelectItem>
-                  <SelectItem value="Technician">Technician</SelectItem>
-                </SelectContent>
-              </Select>
+              <Combobox
+                options={typeOptions}
+                value={watch("type")}
+                onValueChange={(value) => handleComboboxChange("type", value)}
+                placeholder="Select type"
+                searchPlaceholder="Search type..."
+              />
+              {errors.type && (
+                <p className="text-sm text-destructive">{errors.type.message}</p>
+              )}
             </div>
 
             <div className="space-y-2 flex items-center h-full">
@@ -231,30 +292,30 @@ export function UserForm() {
             
             <div className="space-y-2">
               <Label htmlFor="language">Language</Label>
-              <Input 
-                id="language"
-                placeholder="Language"
-                {...register("language")}
+              <Combobox
+                options={languageOptions}
+                value={watch("language") || ""}
+                onValueChange={(value) => handleComboboxChange("language", value)}
+                placeholder="Select language"
+                searchPlaceholder="Search language..."
               />
+              {errors.language && (
+                <p className="text-sm text-destructive">{errors.language.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="currency">Currency</Label>
-              <Select 
-                defaultValue={watch("currency") || ""} 
-                onValueChange={(value: string) => handleSelectChange("currency", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                  <SelectItem value="GBP">GBP</SelectItem>
-                  <SelectItem value="CAD">CAD</SelectItem>
-                  <SelectItem value="AUD">AUD</SelectItem>
-                </SelectContent>
-              </Select>
+              <Combobox
+                options={currencyOptions}
+                value={watch("currency") || ""}
+                onValueChange={(value) => handleComboboxChange("currency", value)}
+                placeholder="Select currency"
+                searchPlaceholder="Search currency..."
+              />
+              {errors.currency && (
+                <p className="text-sm text-destructive">{errors.currency.message}</p>
+              )}
             </div>
           </div>
         )}
