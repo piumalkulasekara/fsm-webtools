@@ -58,6 +58,28 @@ export const queryTemplates: Record<string, QueryTemplate> = {
     orderBy: [{ field: 'Name' }],
     defaultLimit: 100
   },
+  // Person status from METRIX_CODE_TABLE
+  'dropdowns-person-status': {
+    id: 'dropdowns-person-status',
+    description: 'List of person status values for dropdown selection',
+    table: 'METRIX_CODE_TABLE',
+    columns: ['code_value as id', 'message_id as name'],
+    conditions: [
+      {
+        field: 'code_name',
+        paramName: 'code_name',
+        operator: 'eq',
+        required: true
+      },
+      {
+        field: 'active',
+        paramName: 'active',
+        operator: 'eq'
+      }
+    ],
+    orderBy: [{ field: 'message_id' }],
+    defaultLimit: 100
+  },
 };
 
 /**

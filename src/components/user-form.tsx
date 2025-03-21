@@ -12,6 +12,7 @@ import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 import { MultiSelect, MultiSelectOption } from "@/components/ui/multi-select";
+import { PersonStatusDropdown } from "@/components/ui/dropdowns/PersonStatusDropdown";
 
 // Define form schema for validation
 const formSchema = z.object({
@@ -62,10 +63,7 @@ const languageOptions: ComboboxOption[] = [
   { value: "ar", label: "Arabic" },
 ];
 
-const personStatusOptions: ComboboxOption[] = [
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-];
+// Person status options are now fetched dynamically from the API
 
 const typeOptions: ComboboxOption[] = [
   { value: "business-support", label: "Business Support" },
@@ -158,7 +156,7 @@ export function UserForm() {
   const [generalInfoExpanded, setGeneralInfoExpanded] = useState(true);
   const [teamDetailsExpanded, setTeamDetailsExpanded] = useState(true);
   const [rolesLicenseExpanded, setRolesLicenseExpanded] = useState(true);
-
+  
   const {
     register,
     handleSubmit,
@@ -179,7 +177,7 @@ export function UserForm() {
       allocatedTeam: "",
       employee: false,
       jobTitle: "",
-      personStatus: "active",
+      personStatus: "",
       type: "business-support",
       currency: "",
       technicianIdMX: "",
@@ -357,12 +355,9 @@ export function UserForm() {
             
             <div className="space-y-2">
               <Label htmlFor="personStatus">Person Status</Label>
-              <Combobox
-                options={personStatusOptions}
+              <PersonStatusDropdown
                 value={watch("personStatus")}
-                onValueChange={(value) => handleComboboxChange("personStatus", value)}
-                placeholder="Select status"
-                searchPlaceholder="Search status..."
+                onChange={(value) => handleComboboxChange("personStatus", value)}
               />
               {errors.personStatus && (
                 <p className="text-sm text-destructive">{errors.personStatus.message}</p>

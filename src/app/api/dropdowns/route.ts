@@ -35,14 +35,23 @@ export async function GET(request: NextRequest) {
       case 'locations':
         queryId = 'dropdowns-locations';
         break;
+      case 'person-status':
+        queryId = 'dropdowns-person-status';
+        break;
       default:
         return NextResponse.json({ error: 'Invalid dropdown type' }, { status: 400 });
     }
     
     // Execute the query using our new query service
-    const queryParams = { 
+    const queryParams: Record<string, string> = { 
       limit: searchParams.get('limit') || '100',
     };
+    
+    // For person-status, add the required code_name parameter and active filter
+    if (type === 'person-status') {
+      queryParams.code_name = 'PERSON_STATUS';
+      queryParams.active = 'Y';
+    }
     
     const result = await queryService.executeQueryById<DropdownItem>(queryId, queryParams);
     
