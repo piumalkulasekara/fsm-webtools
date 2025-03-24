@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MetadataService } from './service';
-import type { DropdownOption, MetadataState, Language, Currency, Team, Location, Metadata } from './types';
+import type { DropdownOption, MetadataState,  Currency, Team,  Metadata } from './types';
 
 const metadataService = MetadataService.getInstance();
-const METADATA_QUERY_KEY = ['metadata', 'code-table'];
+const METADATA_QUERY_KEY = ['metadata'];
 const STALE_TIME = 24 * 60 * 60 * 1000; // 24 hours
 
 interface UseMetadataResult {
@@ -74,22 +74,12 @@ export function useLanguageOptions(): {
   isLoading: boolean;
   error: Error | null;
 } {
-  const { data: metadata, isLoading, error } = useQuery<Metadata, Error>({
-    queryKey: ['metadata', 'all'],
-    queryFn: () => metadataService.fetchAllMetadata(),
-    staleTime: STALE_TIME,
-    gcTime: STALE_TIME,
-  });
-  
-  const options = useMemo(() => {
-    if (!metadata?.categories.languages) return [];
-    return metadata.categories.languages.map((lang: Language) => ({
-      value: lang.code,
-      label: lang.name
-    }));
-  }, [metadata]);
-
-  return { options, isLoading, error };
+  const { data, isLoading, error } = useMetadata();
+  return {
+    options: data?.languages ?? [],
+    isLoading,
+    error,
+  };
 }
 
 /**
@@ -150,25 +140,79 @@ export function useTeamOptions(): {
  * Hook to access location options
  */
 export function useLocationOptions(): {
-  options: (DropdownOption & { type: string })[];
+  options: DropdownOption[];
   isLoading: boolean;
   error: Error | null;
 } {
-  const { data: metadata, isLoading, error } = useQuery<Metadata, Error>({
-    queryKey: ['metadata', 'all'],
-    queryFn: () => metadataService.fetchAllMetadata(),
-    staleTime: STALE_TIME,
-    gcTime: STALE_TIME,
-  });
-  
-  const options = useMemo(() => {
-    if (!metadata?.categories.locations) return [];
-    return metadata.categories.locations.map((location: Location) => ({
-      value: location.id,
-      label: location.name,
-      type: location.type
-    }));
-  }, [metadata]);
+  const { data, isLoading, error } = useMetadata();
+  return {
+    options: data?.locations ?? [],
+    isLoading,
+    error,
+  };
+}
 
-  return { options, isLoading, error };
+export function useRequestPostGroupOptions(): {
+  options: DropdownOption[];
+  isLoading: boolean;
+  error: Error | null;
+} {
+  const { data, isLoading, error } = useMetadata();
+  return {
+    options: data?.requestPostGroups ?? [],
+    isLoading,
+    error,
+  };
+}
+
+export function useContractPostGroupOptions(): {
+  options: DropdownOption[];
+  isLoading: boolean;
+  error: Error | null;
+} {
+  const { data, isLoading, error } = useMetadata();
+  return {
+    options: data?.contractPostGroups ?? [],
+    isLoading,
+    error,
+  };
+}
+
+export function useAccessGroupOptions(): {
+  options: DropdownOption[];
+  isLoading: boolean;
+  error: Error | null;
+} {
+  const { data, isLoading, error } = useMetadata();
+  return {
+    options: data?.accessGroups ?? [],
+    isLoading,
+    error,
+  };
+}
+
+export function usePersonGroupOptions(): {
+  options: DropdownOption[];
+  isLoading: boolean;
+  error: Error | null;
+} {
+  const { data, isLoading, error } = useMetadata();
+  return {
+    options: data?.personGroups ?? [],
+    isLoading,
+    error,
+  };
+}
+
+export function useAddressTypeOptions(): {
+  options: DropdownOption[];
+  isLoading: boolean;
+  error: Error | null;
+} {
+  const { data, isLoading, error } = useMetadata();
+  return {
+    options: data?.addressTypes ?? [],
+    isLoading,
+    error,
+  };
 } 

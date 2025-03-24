@@ -40,6 +40,8 @@ const formSchema = z.object({
   endsWorkAt: z.string().optional(),
   placeForStock: z.string().optional(),
   stockLocation: z.string().optional(),
+  addressType: z.string().optional(),
+  address: z.string().optional(),
   fsmLicense: z.string().optional(),
   mobileUser: z.boolean().default(false),
   dispatchable: z.boolean().default(false),
@@ -140,6 +142,22 @@ const roleOptions: MultiSelectOption[] = [
   { value: "role-support", label: "Support Agent" },
 ];
 
+const addressTypeOptions: ComboboxOption[] = [
+  { value: "home", label: "Home" },
+  { value: "work", label: "Work" },
+  { value: "billing", label: "Billing" },
+  { value: "shipping", label: "Shipping" },
+  { value: "other", label: "Other" },
+];
+
+const addressOptions: ComboboxOption[] = [
+  { value: "addr-1", label: "123 Main St, City, State" },
+  { value: "addr-2", label: "456 Oak Ave, City, State" },
+  { value: "addr-3", label: "789 Pine Rd, City, State" },
+  { value: "addr-4", label: "321 Elm Blvd, City, State" },
+  { value: "addr-5", label: "654 Maple Ln, City, State" },
+];
+
 // Custom styles for the combobox
 const comboboxStyles = "w-full text-muted-foreground font-normal";
 
@@ -183,6 +201,8 @@ export function UserForm() {
       endsWorkAt: "",
       placeForStock: "",
       stockLocation: "",
+      addressType: "",
+      address: "",
       fsmLicense: "",
       mobileUser: false,
       dispatchable: false,
@@ -551,7 +571,7 @@ export function UserForm() {
                 
                 <div className="space-y-2">
                   <Label htmlFor="placeForStock">Place for Stock</Label>
-                  <div className="grid grid-cols-12 gap-2">
+                  <div className="grid grid-cols-12 gap-4">
                     <div className="col-span-7">
                       <Combobox
                         options={placesOptions}
@@ -579,6 +599,36 @@ export function UserForm() {
                       )}
                     </div>
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="addressType">Address Type</Label>
+                  <Combobox
+                    options={addressTypeOptions}
+                    value={watch("addressType") || ""}
+                    onValueChange={(value) => handleComboboxChange("addressType", value)}
+                    placeholder="Select Address Type"
+                    searchPlaceholder="Search address types..."
+                    className={cn(comboboxStyles, getPlaceholderClass(watch("addressType")))}
+                  />
+                  {errors.addressType && (
+                    <p className="text-sm text-destructive">{errors.addressType.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Combobox
+                    options={addressOptions}
+                    value={watch("address") || ""}
+                    onValueChange={(value) => handleComboboxChange("address", value)}
+                    placeholder="Select Address"
+                    searchPlaceholder="Search addresses..."
+                    className={cn(comboboxStyles, getPlaceholderClass(watch("address")))}
+                  />
+                  {errors.address && (
+                    <p className="text-sm text-destructive">{errors.address.message}</p>
+                  )}
                 </div>
               </div>
             </div>

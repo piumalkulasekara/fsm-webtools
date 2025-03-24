@@ -1,5 +1,5 @@
 import { apiClient } from '../api/client';
-import type { Metadata, MetadataVersionInfo, MetrixCodeTableRecord, MetrixCodeTableResponse, DropdownOption, MetadataState } from './types';
+import type { Metadata, MetadataVersionInfo, MetrixCodeTableRecord, MetrixCodeTableResponse, GlobalCodeTableRecord, GlobalCodeTableResponse, DropdownOption, MetadataState } from './types';
 
 interface ODataResponse<T> {
   '@odata.context'?: string;
@@ -230,6 +230,15 @@ export class MetadataService {
     return data.value;
   }
 
+  private async fetchGlobalCodeTable(): Promise<GlobalCodeTableRecord[]> {
+    const response = await fetch('/api/metadata/global');
+    if (!response.ok) {
+      throw new Error('Failed to fetch global metadata');
+    }
+    const data: GlobalCodeTableResponse = await response.json();
+    return data.value;
+  }
+
   private mapToDropdownOptions(records: MetrixCodeTableRecord[], isPersonStatus: boolean): DropdownOption[] {
     return records
       .map(record => ({
@@ -239,22 +248,52 @@ export class MetadataService {
       .sort((a, b) => a.value.localeCompare(b.value));
   }
 
+  private mapGlobalCodeToDropdownOptions(records: GlobalCodeTableRecord[], codeName: GlobalCodeTableRecord['code_name']): DropdownOption[] {
+    return records
+      .filter(record => record.code_name === codeName)
+      .map(record => ({
+        value: record.code_value,
+        label: record.description
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }
+
   public async fetchMetadata(): Promise<MetadataState> {
-    const records = await this.fetchMetrixCodeTable();
+    const [metrixRecords, globalRecords] = await Promise.all([
+      this.fetchMetrixCodeTable(),
+      this.fetchGlobalCodeTable()
+    ]);
     
+    // Map Metrix Code Table records
     const fsmLicenses = this.mapToDropdownOptions(
-      records.filter(record => record.code_name === 'METRIX_USER_TYPE'),
+      metrixRecords.filter(record => record.code_name === 'METRIX_USER_TYPE'),
       false
     );
 
     const personStatuses = this.mapToDropdownOptions(
-      records.filter(record => record.code_name === 'PERSON_STATUS'),
+      metrixRecords.filter(record => record.code_name === 'PERSON_STATUS'),
       true
     );
 
+    // Map Global Code Table records
+    const languages = this.mapGlobalCodeToDropdownOptions(globalRecords, 'LOCALE_CODE');
+    const requestPostGroups = this.mapGlobalCodeToDropdownOptions(globalRecords, 'POSTING_GROUP');
+    const contractPostGroups = this.mapGlobalCodeToDropdownOptions(globalRecords, 'POSTING_GROUP');
+    const accessGroups = this.mapGlobalCodeToDropdownOptions(globalRecords, 'ACCESS_GROUP');
+    const personGroups = this.mapGlobalCodeToDropdownOptions(globalRecords, 'PERSON_GROUP');
+    const locations = this.mapGlobalCodeToDropdownOptions(globalRecords, 'PLACE_RELATIONSHIP');
+    const addressTypes = this.mapGlobalCodeToDropdownOptions(globalRecords, 'ADDRESS_TYPE');
+
     return {
       fsmLicenses,
-      personStatuses
+      personStatuses,
+      languages,
+      requestPostGroups,
+      contractPostGroups,
+      accessGroups,
+      personGroups,
+      locations,
+      addressTypes
     };
   }
 }

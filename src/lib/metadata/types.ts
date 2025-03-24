@@ -92,6 +92,17 @@ export interface MetrixCodeTableResponse {
   value: MetrixCodeTableRecord[];
 }
 
+export interface GlobalCodeTableRecord {
+  code_name: 'PLACE_RELATIONSHIP' | 'LOCALE_CODE' | 'POSTING_GROUP' | 'ACCESS_GROUP' | 'PERSON_GROUP' | 'ADDRESS_TYPE';
+  code_value: string;
+  description: string;
+}
+
+export interface GlobalCodeTableResponse {
+  '@odata.context': string;
+  value: GlobalCodeTableRecord[];
+}
+
 export interface DropdownOption {
   value: string;
   label: string;
@@ -100,4 +111,11 @@ export interface DropdownOption {
 export interface MetadataState {
   fsmLicenses: DropdownOption[];
   personStatuses: DropdownOption[];
+  languages: DropdownOption[];
+  requestPostGroups: DropdownOption[];
+  contractPostGroups: DropdownOption[];
+  accessGroups: DropdownOption[];
+  personGroups: DropdownOption[];
+  locations: DropdownOption[];
+  addressTypes: DropdownOption[];
 } 
