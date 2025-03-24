@@ -13,7 +13,16 @@ import { cn } from "@/lib/utils";
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 import { MultiSelect, MultiSelectOption } from "@/components/ui/multi-select";
 import { PersonStatusDropdown } from "@/components/ui/dropdowns/PersonStatusDropdown";
-import { useFsmLicenseOptions } from "@/lib/metadata/hooks";
+import { 
+  useFsmLicenseOptions,
+  useLanguageOptions,
+  useRequestPostGroupOptions,
+  useContractPostGroupOptions,
+  useAccessGroupOptions,
+  usePersonGroupOptions,
+  useLocationOptions,
+  useAddressTypeOptions
+} from "@/lib/metadata/hooks";
 
 // Define form schema for validation
 const formSchema = z.object({
@@ -52,21 +61,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-// Define dropdown options
-const languageOptions: ComboboxOption[] = [
-  { value: "en", label: "English" },
-  { value: "es", label: "Spanish" },
-  { value: "fr", label: "French" },
-  { value: "de", label: "German" },
-  { value: "it", label: "Italian" },
-  { value: "pt", label: "Portuguese" },
-  { value: "ru", label: "Russian" },
-  { value: "zh", label: "Chinese" },
-  { value: "ja", label: "Japanese" },
-  { value: "ar", label: "Arabic" },
-];
-
-// Person status options are now fetched dynamically from the API
+// Define dropdown options for the remaining hardcoded dropdowns
 
 const typeOptions: ComboboxOption[] = [
   { value: "business-support", label: "Business Support" },
@@ -88,25 +83,6 @@ const currencyOptions: ComboboxOption[] = [
   { value: "MXN", label: "MXN - Mexican Peso" },
 ];
 
-const personGroupOptions: ComboboxOption[] = [
-  { value: "managers", label: "Managers" },
-  { value: "supervisors", label: "Supervisors" },
-  { value: "field-technicians", label: "Field Technicians" },
-  { value: "administrative", label: "Administrative" },
-  { value: "support-staff", label: "Support Staff" },
-  { value: "contractors", label: "Contractors" },
-];
-
-// Shared options for Lely Center, Contract Post Group, and Request Post Group
-const sharedGroupOptions: ComboboxOption[] = [
-  { value: "lc-northeast", label: "Lely Center Northeast" },
-  { value: "lc-southeast", label: "Lely Center Southeast" },
-  { value: "lc-midwest", label: "Lely Center Midwest" },
-  { value: "lc-southwest", label: "Lely Center Southwest" },
-  { value: "lc-northwest", label: "Lely Center Northwest" },
-  { value: "lc-central", label: "Lely Center Central" },
-];
-
 const allocatedTeamOptions: ComboboxOption[] = [
   { value: "team-service", label: "Service Team" },
   { value: "team-sales", label: "Sales Team" },
@@ -125,12 +101,12 @@ const placesOptions: ComboboxOption[] = [
   { value: "place-customer-site", label: "Customer Site" },
 ];
 
-const locationOptions: ComboboxOption[] = [
-  { value: "loc-main", label: "Main" },
-  { value: "loc-secondary", label: "Secondary" },
-  { value: "loc-storage", label: "Storage" },
-  { value: "loc-field", label: "Field" },
-  { value: "loc-temporary", label: "Temporary" },
+const addressOptions: ComboboxOption[] = [
+  { value: "addr-1", label: "123 Main St, City, State" },
+  { value: "addr-2", label: "456 Oak Ave, City, State" },
+  { value: "addr-3", label: "789 Pine Rd, City, State" },
+  { value: "addr-4", label: "321 Elm Blvd, City, State" },
+  { value: "addr-5", label: "654 Maple Ln, City, State" },
 ];
 
 const roleOptions: MultiSelectOption[] = [
@@ -140,22 +116,6 @@ const roleOptions: MultiSelectOption[] = [
   { value: "role-dispatcher", label: "Dispatcher" },
   { value: "role-planner", label: "Planner" },
   { value: "role-support", label: "Support Agent" },
-];
-
-const addressTypeOptions: ComboboxOption[] = [
-  { value: "home", label: "Home" },
-  { value: "work", label: "Work" },
-  { value: "billing", label: "Billing" },
-  { value: "shipping", label: "Shipping" },
-  { value: "other", label: "Other" },
-];
-
-const addressOptions: ComboboxOption[] = [
-  { value: "addr-1", label: "123 Main St, City, State" },
-  { value: "addr-2", label: "456 Oak Ave, City, State" },
-  { value: "addr-3", label: "789 Pine Rd, City, State" },
-  { value: "addr-4", label: "321 Elm Blvd, City, State" },
-  { value: "addr-5", label: "654 Maple Ln, City, State" },
 ];
 
 // Custom styles for the combobox
@@ -212,8 +172,15 @@ export function UserForm() {
     },
   });
 
-  // Add FSM License options from the hook
+  // Add metadata hooks
   const { options: fsmLicenseOptions, isLoading: fsmLicenseLoading, error: fsmLicenseError } = useFsmLicenseOptions();
+  const { options: languageOptions, isLoading: languageLoading, error: languageError } = useLanguageOptions();
+  const { options: requestPostGroupOptions, isLoading: requestPostGroupLoading, error: requestPostGroupError } = useRequestPostGroupOptions();
+  const { options: contractPostGroupOptions, isLoading: contractPostGroupLoading, error: contractPostGroupError } = useContractPostGroupOptions();
+  const { options: accessGroupOptions, isLoading: accessGroupLoading, error: accessGroupError } = useAccessGroupOptions();
+  const { options: personGroupOptions, isLoading: personGroupLoading, error: personGroupError } = usePersonGroupOptions();
+  const { options: locationOptions, isLoading: locationLoading, error: locationError } = useLocationOptions();
+  const { options: addressTypeOptions, isLoading: addressTypeLoading, error: addressTypeError } = useAddressTypeOptions();
 
   const onSubmit = (data: FormValues) => {
     console.log("Form submitted with values:", data);
@@ -362,11 +329,14 @@ export function UserForm() {
                 options={personGroupOptions}
                 value={watch("personGroup") || ""}
                 onValueChange={(value) => handleComboboxChange("personGroup", value)}
-                placeholder="Select person group"
+                placeholder={personGroupLoading ? "Loading..." : "Select person group"}
                 searchPlaceholder="Search person group..."
+                className={cn(comboboxStyles, getPlaceholderClass(watch("personGroup")))}
               />
-              {errors.personGroup && (
-                <p className="text-sm text-destructive">{errors.personGroup.message}</p>
+              {personGroupError && (
+                <p className="text-sm text-destructive">
+                  {personGroupError.message || 'Failed to load person group options'}
+                </p>
               )}
             </div>
             
@@ -411,12 +381,14 @@ export function UserForm() {
                 options={languageOptions}
                 value={watch("language") || ""}
                 onValueChange={(value) => handleComboboxChange("language", value)}
-                placeholder="Select language"
+                placeholder={languageLoading ? "Loading..." : "Select language"}
                 searchPlaceholder="Search language..."
                 className={cn(comboboxStyles, getPlaceholderClass(watch("language")))}
               />
-              {errors.language && (
-                <p className="text-sm text-destructive">{errors.language.message}</p>
+              {languageError && (
+                <p className="text-sm text-destructive">
+                  {languageError.message || 'Failed to load language options'}
+                </p>
               )}
             </div>
 
@@ -456,45 +428,51 @@ export function UserForm() {
               <div className="space-y-2">
                 <Label htmlFor="lelyCenter">Lely Center (Access Group)</Label>
                 <Combobox
-                  options={sharedGroupOptions}
+                  options={accessGroupOptions}
                   value={watch("lelyCenter") || ""}
                   onValueChange={(value) => handleComboboxChange("lelyCenter", value)}
-                  placeholder="Select Lely Center"
+                  placeholder={accessGroupLoading ? "Loading..." : "Select Lely Center"}
                   searchPlaceholder="Search Lely Center..."
                   className={cn(comboboxStyles, getPlaceholderClass(watch("lelyCenter")))}
                 />
-                {errors.lelyCenter && (
-                  <p className="text-sm text-destructive">{errors.lelyCenter.message}</p>
+                {accessGroupError && (
+                  <p className="text-sm text-destructive">
+                    {accessGroupError.message || 'Failed to load access group options'}
+                  </p>
                 )}
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="contractPostGroup">Contract Post Group</Label>
                 <Combobox
-                  options={sharedGroupOptions}
+                  options={contractPostGroupOptions}
                   value={watch("contractPostGroup") || ""}
                   onValueChange={(value) => handleComboboxChange("contractPostGroup", value)}
-                  placeholder="Select Contract Post Group"
+                  placeholder={contractPostGroupLoading ? "Loading..." : "Select Contract Post Group"}
                   searchPlaceholder="Search Contract Post Group..."
                   className={cn(comboboxStyles, getPlaceholderClass(watch("contractPostGroup")))}
                 />
-                {errors.contractPostGroup && (
-                  <p className="text-sm text-destructive">{errors.contractPostGroup.message}</p>
+                {contractPostGroupError && (
+                  <p className="text-sm text-destructive">
+                    {contractPostGroupError.message || 'Failed to load contract post group options'}
+                  </p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="requestPostGroup">Request Post Group</Label>
                 <Combobox
-                  options={sharedGroupOptions}
+                  options={requestPostGroupOptions}
                   value={watch("requestPostGroup") || ""}
                   onValueChange={(value) => handleComboboxChange("requestPostGroup", value)}
-                  placeholder="Select Request Post Group"
+                  placeholder={requestPostGroupLoading ? "Loading..." : "Select Request Post Group"}
                   searchPlaceholder="Search Request Post Group..."
                   className={cn(comboboxStyles, getPlaceholderClass(watch("requestPostGroup")))}
                 />
-                {errors.requestPostGroup && (
-                  <p className="text-sm text-destructive">{errors.requestPostGroup.message}</p>
+                {requestPostGroupError && (
+                  <p className="text-sm text-destructive">
+                    {requestPostGroupError.message || 'Failed to load request post group options'}
+                  </p>
                 )}
               </div>
             </div>
@@ -590,12 +568,14 @@ export function UserForm() {
                         options={locationOptions}
                         value={watch("stockLocation") || ""}
                         onValueChange={(value) => handleComboboxChange("stockLocation", value)}
-                        placeholder="Location"
+                        placeholder={locationLoading ? "Loading..." : "Location"}
                         searchPlaceholder="Search locations..."
                         className={cn(comboboxStyles, getPlaceholderClass(watch("stockLocation")))}
                       />
-                      {errors.stockLocation && (
-                        <p className="text-sm text-destructive">{errors.stockLocation.message}</p>
+                      {locationError && (
+                        <p className="text-sm text-destructive">
+                          {locationError.message || 'Failed to load location options'}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -607,12 +587,14 @@ export function UserForm() {
                     options={addressTypeOptions}
                     value={watch("addressType") || ""}
                     onValueChange={(value) => handleComboboxChange("addressType", value)}
-                    placeholder="Select Address Type"
+                    placeholder={addressTypeLoading ? "Loading..." : "Select Address Type"}
                     searchPlaceholder="Search address types..."
                     className={cn(comboboxStyles, getPlaceholderClass(watch("addressType")))}
                   />
-                  {errors.addressType && (
-                    <p className="text-sm text-destructive">{errors.addressType.message}</p>
+                  {addressTypeError && (
+                    <p className="text-sm text-destructive">
+                      {addressTypeError.message || 'Failed to load address type options'}
+                    </p>
                   )}
                 </div>
 
