@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { Combobox } from '@/components/ui/combobox';
-import { useQuery } from '@tanstack/react-query';
+import { usePersonStatusOptions } from '@/lib/metadata/hooks';
 
 interface PersonStatusDropdownProps {
   value: string;
@@ -12,24 +12,8 @@ interface PersonStatusDropdownProps {
   searchPlaceholder?: string;
 }
 
-interface PersonStatusOption {
-  id: string;
-  name: string;
-}
-
 /**
- * Fetch person status from the API
- */
-async function fetchPersonStatus(): Promise<PersonStatusOption[]> {
-  const response = await fetch('/api/person-status');
-  if (!response.ok) {
-    throw new Error(`Failed to fetch person status options: ${response.status}`);
-  }
-  return response.json();
-}
-
-/**
- * Dropdown component for selecting a person status, using TanStack Query for caching
+ * Dropdown component for selecting a person status, using metadata service for data
  */
 export function PersonStatusDropdown({
   value,
@@ -38,29 +22,14 @@ export function PersonStatusDropdown({
   placeholder,
   searchPlaceholder = 'Search status...',
 }: PersonStatusDropdownProps) {
-  // Use TanStack Query for data fetching with caching
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['person-status'],
-    queryFn: fetchPersonStatus,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    retry: 2,
-  });
-  
-  // Convert API response to Combobox options format
-  const options = React.useMemo(() => 
-    data?.map(item => ({
-      value: item.id,
-      label: item.name
-    })) || [],
-  [data]);
+  const { options, isLoading, error } = usePersonStatusOptions();
   
   // Set default value when options load and no value is selected
-  // This effect only runs when the data changes, not when value changes
   useEffect(() => {
     if (options.length > 0 && !value && onChange) {
       onChange(options[0].value);
     }
-  }, [options, onChange]);  // Removed 'value' from dependencies
+  }, [options, onChange]);
 
   return (
     <div className="relative">

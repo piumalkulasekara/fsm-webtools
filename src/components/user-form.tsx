@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 import { MultiSelect, MultiSelectOption } from "@/components/ui/multi-select";
 import { PersonStatusDropdown } from "@/components/ui/dropdowns/PersonStatusDropdown";
+import { useFsmLicenseOptions } from "@/lib/metadata/hooks";
 
 // Define form schema for validation
 const formSchema = z.object({
@@ -130,13 +131,6 @@ const locationOptions: ComboboxOption[] = [
   { value: "loc-temporary", label: "Temporary" },
 ];
 
-const fsmLicenseOptions: ComboboxOption[] = [
-  { value: "mobile", label: "MOBILE" },
-  { value: "message", label: "MESSAGE" },
-  { value: "named", label: "NAMED" },
-  { value: "studio", label: "STUDIO" },
-];
-
 const roleOptions: MultiSelectOption[] = [
   { value: "role-admin", label: "Administrator" },
   { value: "role-manager", label: "Manager" },
@@ -197,6 +191,9 @@ export function UserForm() {
       roles: [],
     },
   });
+
+  // Add FSM License options from the hook
+  const { options: fsmLicenseOptions, isLoading: fsmLicenseLoading, error: fsmLicenseError } = useFsmLicenseOptions();
 
   const onSubmit = (data: FormValues) => {
     console.log("Form submitted with values:", data);
@@ -610,12 +607,14 @@ export function UserForm() {
                 options={fsmLicenseOptions}
                 value={watch("fsmLicense") || ""}
                 onValueChange={(value) => handleComboboxChange("fsmLicense", value)}
-                placeholder="Select FSM License"
+                placeholder={fsmLicenseLoading ? "Loading..." : "Select FSM License"}
                 searchPlaceholder="Search license types..."
                 className={cn(comboboxStyles, getPlaceholderClass(watch("fsmLicense")))}
               />
-              {errors.fsmLicense && (
-                <p className="text-sm text-destructive">{errors.fsmLicense.message}</p>
+              {fsmLicenseError && (
+                <p className="text-sm text-destructive">
+                  {fsmLicenseError.message || 'Failed to load FSM license options'}
+                </p>
               )}
             </div>
             
