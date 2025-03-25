@@ -565,53 +565,52 @@ export function UserForm() {
                     <p className="text-sm text-destructive">{errors.endsWorkAt.message}</p>
                   )}
                 </div>
-                
-                <div className="space-y-2">
-                  <div className="grid grid-cols-12 gap-4">
-                    <div className="col-span-6 space-y-2">
-                      <Label htmlFor="placeForStock">Place for Stock</Label>
-                      <Combobox
-                        options={placeOptions}
-                        value={watch("placeForStock") || ""}
-                        onValueChange={(value) => handleComboboxChange("placeForStock", value)}
-                        placeholder={placesLoading ? "Loading places..." : "Select Stock Place"}
-                        searchPlaceholder="Search places..."
-                        className={cn(comboboxStyles, getPlaceholderClass(watch("placeForStock")))}
-                      />
-                      {placesError && (
-                        <p className="text-sm text-destructive">
-                          {placesError.message || 'Failed to load places'}
-                        </p>
-                      )}
-                      {errors.placeForStock && (
-                        <p className="text-sm text-destructive">{errors.placeForStock.message}</p>
-                      )}
-                    </div>
-                    <div className="col-span-6 space-y-2">
-                      <Label htmlFor="stockLocation">Location</Label>
-                      <Combobox
-                        options={locationOptions}
-                        value={watch("stockLocation") || ""}
-                        onValueChange={(value) => handleComboboxChange("stockLocation", value)}
-                        placeholder={locationIsDisabled 
-                          ? "Select a Place for Stock first" 
-                          : (locationLoading ? "Loading..." : "Select Location")}
-                        searchPlaceholder="Search locations..."
-                        className={cn(comboboxStyles, getPlaceholderClass(watch("stockLocation")))}
-                        disabled={locationIsDisabled}
-                      />
-                      {!locationIsDisabled && locationError && (
-                        <p className="text-sm text-destructive">
-                          {locationError.message || 'Failed to load location options'}
-                        </p>
-                      )}
-                      {locationIsDisabled && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Please select a Place for Stock to enable location selection
-                        </p>
-                      )}
-                    </div>
-                  </div>
+              </div>
+              
+              {/* Place for Stock and Location in a separate row */}
+              <div className="grid grid-cols-12 gap-4 mt-4">
+                <div className="col-span-6 space-y-2">
+                  <Label htmlFor="placeForStock">Place for Stock</Label>
+                  <Combobox
+                    options={placeOptions}
+                    value={watch("placeForStock") || ""}
+                    onValueChange={(value) => handleComboboxChange("placeForStock", value)}
+                    placeholder={placesLoading ? "Loading places..." : "Select Stock Place"}
+                    searchPlaceholder="Search places..."
+                    className={cn(comboboxStyles, getPlaceholderClass(watch("placeForStock")))}
+                  />
+                  {placesError && (
+                    <p className="text-sm text-destructive">
+                      {placesError.message || 'Failed to load places'}
+                    </p>
+                  )}
+                  {errors.placeForStock && (
+                    <p className="text-sm text-destructive">{errors.placeForStock.message}</p>
+                  )}
+                </div>
+                <div className="col-span-6 space-y-2">
+                  <Label htmlFor="stockLocation">Location</Label>
+                  <Combobox
+                    options={locationOptions}
+                    value={watch("stockLocation") || ""}
+                    onValueChange={(value) => handleComboboxChange("stockLocation", value)}
+                    placeholder={locationIsDisabled 
+                      ? "Select a Place for Stock first" 
+                      : (locationLoading ? "Loading..." : "Select Location")}
+                    searchPlaceholder="Search locations..."
+                    className={cn(comboboxStyles, getPlaceholderClass(watch("stockLocation")))}
+                    disabled={locationIsDisabled}
+                  />
+                  {!locationIsDisabled && locationError && (
+                    <p className="text-sm text-destructive">
+                      {locationError.message || 'Failed to load location options'}
+                    </p>
+                  )}
+                  {locationIsDisabled && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Please select a Place for Stock to enable location selection
+                    </p>
+                  )}
                 </div>
               </div>
 

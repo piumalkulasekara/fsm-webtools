@@ -49,8 +49,10 @@ export function Combobox({
   // Filter options based on search query
   const filteredOptions = React.useMemo(() => {
     if (!searchQuery) return safeOptions;
+    const query = searchQuery.toLowerCase();
     return safeOptions.filter(option => 
-      option.label.toLowerCase().includes(searchQuery.toLowerCase())
+      option.label.toLowerCase().includes(query) || 
+      option.value.toLowerCase().includes(query)
     );
   }, [safeOptions, searchQuery]);
 

@@ -174,7 +174,7 @@ export function usePlaceOptions(): {
         
         placeOptions.push({
           value: record.place_id,
-          label: `${record.whos_place} - ${record.name}`
+          label: `${record.whos_place} - ${record.name} (${record.place_id})`
         });
       }
     });
