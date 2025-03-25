@@ -93,7 +93,7 @@ export interface MetrixCodeTableResponse {
 }
 
 export interface GlobalCodeTableRecord {
-  code_name: 'PLACE_RELATIONSHIP' | 'LOCALE_CODE' | 'POSTING_GROUP' | 'ACCESS_GROUP' | 'PERSON_GROUP' | 'ADDRESS_TYPE';
+  code_name: 'LOCALE_CODE' | 'POSTING_GROUP' | 'ACCESS_GROUP' | 'PERSON_GROUP' | 'ADDRESS_TYPE';
   code_value: string;
   description: string;
 }

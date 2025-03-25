@@ -127,6 +127,7 @@ export function useTeamOptions(): {
 
 /**
  * Hook to access location options
+ * Note: Currently returns an empty array as location data fetching has been temporarily disabled
  */
 export function useLocationOptions(): {
   options: DropdownOption[];

@@ -255,8 +255,10 @@ export class MetadataService {
     const contractPostGroups = this.mapGlobalCodeToDropdownOptions(globalRecords, 'POSTING_GROUP');
     const accessGroups = this.mapGlobalCodeToDropdownOptions(globalRecords, 'ACCESS_GROUP');
     const personGroups = this.mapGlobalCodeToDropdownOptions(globalRecords, 'PERSON_GROUP');
-    const locations = this.mapGlobalCodeToDropdownOptions(globalRecords, 'PLACE_RELATIONSHIP');
     const addressTypes = this.mapGlobalCodeToDropdownOptions(globalRecords, 'ADDRESS_TYPE');
+
+    // For location, return empty array as per requirements
+    const locations: DropdownOption[] = [];
 
     // Map Currency records
     const currencies = this.mapCurrencyToDropdownOptions(currencyRecords);
