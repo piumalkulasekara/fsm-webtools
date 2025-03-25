@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
-import { MultiSelect, MultiSelectOption } from "@/components/ui/multi-select";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { PersonStatusDropdown } from "@/components/ui/dropdowns/PersonStatusDropdown";
 import { 
   useFsmLicenseOptions,
@@ -24,7 +24,8 @@ import {
   useAddressTypeOptions,
   useCurrencyOptions,
   usePlaceOptions,
-  useAddressOptions
+  useAddressOptions,
+  useUserRoleOptions
 } from "@/lib/metadata/hooks";
 
 // Define form schema for validation
@@ -88,14 +89,8 @@ const allocatedTeamOptions: ComboboxOption[] = [
 // Remove hardcoded addressOptions array since we're using the hook
 // const addressOptions: ComboboxOption[] = [...];
 
-const roleOptions: MultiSelectOption[] = [
-  { value: "role-admin", label: "Administrator" },
-  { value: "role-manager", label: "Manager" },
-  { value: "role-technician", label: "Technician" },
-  { value: "role-dispatcher", label: "Dispatcher" },
-  { value: "role-planner", label: "Planner" },
-  { value: "role-support", label: "Support Agent" },
-];
+// Remove hardcoded role options array since we're using the hook
+// const roleOptions: MultiSelectOption[] = [...];
 
 // Custom styles for the combobox
 const comboboxStyles = "w-full text-muted-foreground font-normal";
@@ -182,6 +177,13 @@ export function UserForm() {
     isLoading: addressesLoading, 
     error: addressesError 
   } = useAddressOptions();
+
+  // Add user role options hook
+  const { 
+    options: roleOptions, 
+    isLoading: rolesLoading, 
+    error: rolesError 
+  } = useUserRoleOptions();
 
   const onSubmit = (data: FormValues) => {
     console.log("Form submitted with values:", data);
@@ -732,11 +734,16 @@ export function UserForm() {
                 options={roleOptions}
                 values={watch("roles") || []}
                 onValuesChange={(values) => handleMultiSelectChange("roles", values)}
-                placeholder="Select Roles"
+                placeholder={rolesLoading ? "Loading roles..." : "Select Roles"}
                 searchPlaceholder="Search roles..."
                 badgeVariant="secondary"
                 closeOnSelect={true}
               />
+              {rolesError && (
+                <p className="text-sm text-destructive">
+                  {rolesError.message || 'Failed to load role options'}
+                </p>
+              )}
               {errors.roles && (
                 <p className="text-sm text-destructive">{errors.roles.message}</p>
               )}

@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MetadataService } from './service';
-import type { DropdownOption, MetadataState, Team, Metadata, PlaceAddressRecord } from './types';
+import type { DropdownOption, MetadataState, Team, Metadata, PlaceAddressRecord, UserRoleRecord } from './types';
+import type { MultiSelectOption } from '@/components/ui/multi-select';
 
 const metadataService = MetadataService.getInstance();
 const METADATA_QUERY_KEY = ['metadata'];
@@ -378,5 +379,55 @@ export function useAddressTypeOptions(): {
     options: data?.addressTypes ?? [],
     isLoading,
     error,
+  };
+}
+
+/**
+ * Hook to access user roles data
+ */
+export function useUserRolesData() {
+  const { data, isLoading, error } = useQuery<{ value: UserRoleRecord[] }, Error>({
+    queryKey: ['userRoles'],
+    queryFn: async () => {
+      const response = await fetch('/api/metadata/roles');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user roles data: ${response.statusText}`);
+      }
+      return await response.json();
+    },
+    staleTime: 1000 * 60 * 60, // 1 hour
+    gcTime: Infinity,
+  });
+
+  return { 
+    data: data?.value ?? [], 
+    isLoading, 
+    error 
+  };
+}
+
+/**
+ * Hook to access user role options for multi-select
+ */
+export function useUserRoleOptions(): {
+  options: MultiSelectOption[];
+  isLoading: boolean;
+  error: Error | null;
+} {
+  const { data, isLoading, error } = useUserRolesData();
+  
+  const options = useMemo(() => {
+    if (!data) return [];
+    
+    return data.map(record => ({
+      value: record.user_role,
+      label: `${record.description} (${record.user_role})`
+    })).sort((a, b) => a.label.localeCompare(b.label));
+  }, [data]);
+
+  return {
+    options,
+    isLoading,
+    error
   };
 } 

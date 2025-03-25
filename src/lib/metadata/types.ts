@@ -163,4 +163,14 @@ export interface PlaceAddressRecord {
 export interface PlaceAddressResponse {
   '@odata.context': string;
   value: PlaceAddressRecord[];
+}
+
+export interface UserRoleRecord {
+  user_role: string;
+  description: string;
+}
+
+export interface UserRoleResponse {
+  '@odata.context': string;
+  value: UserRoleRecord[];
 } 
