@@ -49,7 +49,7 @@ const formSchema = z.object({
   endsWorkAt: z.string().optional(),
   placeForStock: z.string().optional(),
   stockLocation: z.string().optional(),
-  addressType: z.string().optional(),
+  addressType: z.string().default("DEFAULT"),
   address: z.string().optional(),
   fsmLicense: z.string().optional(),
   mobileUser: z.boolean().default(false),
@@ -161,7 +161,7 @@ export function UserForm() {
       endsWorkAt: "",
       placeForStock: "",
       stockLocation: "",
-      addressType: "",
+      addressType: "DEFAULT",
       address: "",
       fsmLicense: "",
       mobileUser: false,
@@ -550,7 +550,7 @@ export function UserForm() {
                 <div className="space-y-2">
                   <Label htmlFor="placeForStock">Place for Stock</Label>
                   <div className="grid grid-cols-12 gap-4">
-                    <div className="col-span-7">
+                    <div className="col-span-6">
                       <Combobox
                         options={placesOptions}
                         value={watch("placeForStock") || ""}
@@ -563,7 +563,7 @@ export function UserForm() {
                         <p className="text-sm text-destructive">{errors.placeForStock.message}</p>
                       )}
                     </div>
-                    <div className="col-span-5">
+                    <div className="col-span-6">
                       <Combobox
                         options={locationOptions}
                         value={watch("stockLocation") || ""}
@@ -580,12 +580,15 @@ export function UserForm() {
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="space-y-2">
+              {/* Address Type and Address in a separate grid row */}
+              <div className="grid grid-cols-12 gap-4 mt-4">
+                <div className="col-span-4 space-y-2">
                   <Label htmlFor="addressType">Address Type</Label>
                   <Combobox
                     options={addressTypeOptions}
-                    value={watch("addressType") || ""}
+                    value={watch("addressType")}
                     onValueChange={(value) => handleComboboxChange("addressType", value)}
                     placeholder={addressTypeLoading ? "Loading..." : "Select Address Type"}
                     searchPlaceholder="Search address types..."
@@ -597,8 +600,7 @@ export function UserForm() {
                     </p>
                   )}
                 </div>
-
-                <div className="space-y-2">
+                <div className="col-span-8 space-y-2">
                   <Label htmlFor="address">Address</Label>
                   <Combobox
                     options={addressOptions}
