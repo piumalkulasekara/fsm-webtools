@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MetadataService } from './service';
-import type { DropdownOption, MetadataState,  Currency, Team,  Metadata } from './types';
+import type { DropdownOption, MetadataState, Team, Metadata } from './types';
 
 const metadataService = MetadataService.getInstance();
 const METADATA_QUERY_KEY = ['metadata'];
@@ -86,27 +86,16 @@ export function useLanguageOptions(): {
  * Hook to access currency options
  */
 export function useCurrencyOptions(): {
-  options: (DropdownOption & { symbol: string })[];
+  options: DropdownOption[];
   isLoading: boolean;
   error: Error | null;
 } {
-  const { data: metadata, isLoading, error } = useQuery<Metadata, Error>({
-    queryKey: ['metadata', 'all'],
-    queryFn: () => metadataService.fetchAllMetadata(),
-    staleTime: STALE_TIME,
-    gcTime: STALE_TIME,
-  });
-  
-  const options = useMemo(() => {
-    if (!metadata?.categories.currencies) return [];
-    return metadata.categories.currencies.map((currency: Currency) => ({
-      value: currency.code,
-      label: `${currency.code} - ${currency.name}`,
-      symbol: currency.symbol
-    }));
-  }, [metadata]);
-
-  return { options, isLoading, error };
+  const { data, isLoading, error } = useMetadata();
+  return {
+    options: data?.currencies ?? [],
+    isLoading,
+    error,
+  };
 }
 
 /**

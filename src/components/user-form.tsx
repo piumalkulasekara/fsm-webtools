@@ -21,7 +21,8 @@ import {
   useAccessGroupOptions,
   usePersonGroupOptions,
   useLocationOptions,
-  useAddressTypeOptions
+  useAddressTypeOptions,
+  useCurrencyOptions
 } from "@/lib/metadata/hooks";
 
 // Define form schema for validation
@@ -68,19 +69,6 @@ const typeOptions: ComboboxOption[] = [
   { value: "administrator", label: "Administrator" },
   { value: "dispatcher", label: "Dispatcher" },
   { value: "technician", label: "Technician" },
-];
-
-const currencyOptions: ComboboxOption[] = [
-  { value: "USD", label: "USD - US Dollar" },
-  { value: "EUR", label: "EUR - Euro" },
-  { value: "GBP", label: "GBP - British Pound" },
-  { value: "CAD", label: "CAD - Canadian Dollar" },
-  { value: "AUD", label: "AUD - Australian Dollar" },
-  { value: "JPY", label: "JPY - Japanese Yen" },
-  { value: "CNY", label: "CNY - Chinese Yuan" },
-  { value: "INR", label: "INR - Indian Rupee" },
-  { value: "BRL", label: "BRL - Brazilian Real" },
-  { value: "MXN", label: "MXN - Mexican Peso" },
 ];
 
 const allocatedTeamOptions: ComboboxOption[] = [
@@ -181,6 +169,7 @@ export function UserForm() {
   const { options: personGroupOptions, isLoading: personGroupLoading, error: personGroupError } = usePersonGroupOptions();
   const { options: locationOptions, isLoading: locationLoading, error: locationError } = useLocationOptions();
   const { options: addressTypeOptions, isLoading: addressTypeLoading, error: addressTypeError } = useAddressTypeOptions();
+  const { options: currencyOptions, isLoading: currencyLoading, error: currencyError } = useCurrencyOptions();
 
   const onSubmit = (data: FormValues) => {
     console.log("Form submitted with values:", data);
@@ -398,11 +387,14 @@ export function UserForm() {
                 options={currencyOptions}
                 value={watch("currency") || ""}
                 onValueChange={(value) => handleComboboxChange("currency", value)}
-                placeholder="Select currency"
+                placeholder={currencyLoading ? "Loading..." : "Select currency"}
                 searchPlaceholder="Search currency..."
+                className={cn(comboboxStyles, getPlaceholderClass(watch("currency")))}
               />
-              {errors.currency && (
-                <p className="text-sm text-destructive">{errors.currency.message}</p>
+              {currencyError && (
+                <p className="text-sm text-destructive">
+                  {currencyError.message || 'Failed to load currency options'}
+                </p>
               )}
             </div>
           </div>

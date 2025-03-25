@@ -108,6 +108,16 @@ export interface DropdownOption {
   label: string;
 }
 
+export interface CurrencyRecord {
+  currency: string;
+  description: string;
+}
+
+export interface CurrencyResponse {
+  '@odata.context': string;
+  value: CurrencyRecord[];
+}
+
 export interface MetadataState {
   fsmLicenses: DropdownOption[];
   personStatuses: DropdownOption[];
@@ -118,4 +128,5 @@ export interface MetadataState {
   personGroups: DropdownOption[];
   locations: DropdownOption[];
   addressTypes: DropdownOption[];
+  currencies: DropdownOption[];
 } 

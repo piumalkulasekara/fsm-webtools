@@ -1,5 +1,5 @@
 import { apiClient } from '../api/client';
-import type { Metadata, MetadataVersionInfo, MetrixCodeTableRecord, MetrixCodeTableResponse, GlobalCodeTableRecord, GlobalCodeTableResponse, DropdownOption, MetadataState } from './types';
+import type { Metadata, MetadataVersionInfo, MetrixCodeTableRecord, MetrixCodeTableResponse, GlobalCodeTableRecord, GlobalCodeTableResponse, DropdownOption, MetadataState, CurrencyRecord, CurrencyResponse } from './types';
 
 interface ODataResponse<T> {
   '@odata.context'?: string;
@@ -10,12 +10,6 @@ interface LanguageRecord {
   code: string;
   name: string;
   isDefault: boolean;
-}
-
-interface CurrencyRecord {
-  code: string;
-  name: string;
-  symbol: string;
 }
 
 interface TeamRecord {
@@ -37,19 +31,9 @@ export class MetadataService {
   private static instance: MetadataService;
   private versionKey = 'metadata_version';
   private metadataKey = 'metadata_cache';
-  private baseUrl: string;
 
-  private constructor() {
-    const baseUrl = process.env.NEXT_PUBLIC_ODATA_API_URL;
-    if (!baseUrl) {
-      throw new Error('NEXT_PUBLIC_ODATA_API_URL environment variable is not defined');
-    }
-    this.baseUrl = baseUrl;
-  }
+  private constructor() {}
 
-  /**
-   * Get singleton instance
-   */
   public static getInstance(): MetadataService {
     if (!MetadataService.instance) {
       MetadataService.instance = new MetadataService();
@@ -57,31 +41,18 @@ export class MetadataService {
     return MetadataService.instance;
   }
 
-  /**
-   * Fetch all metadata from the server
-   */
   public async fetchAllMetadata(): Promise<Metadata> {
-    const [personStatus, languages, currencies, teams, locations] = await Promise.all([
-      this.fetchPersonStatus(),
-      this.fetchLanguages(),
-      this.fetchCurrencies(),
-      this.fetchTeams(),
-      this.fetchLocations()
-    ]);
-
-    const metadata: Metadata = {
-      version: new Date().toISOString(),
+    return {
       lastUpdated: new Date().toISOString(),
+      version: "1.0",
       categories: {
-        personStatus,
-        languages,
-        currencies,
-        teams,
-        locations
+        personStatus: [], // Now handled by fetchMetadata
+        languages: [], // Will be implemented when the API is ready
+        currencies: [], // Now handled by fetchCurrencyData
+        teams: [], // Will be implemented when the API is ready
+        locations: [], // Will be implemented when the API is ready
       }
     };
-
-    return metadata;
   }
 
   /**
@@ -90,7 +61,7 @@ export class MetadataService {
   private async fetchPersonStatus() {
     const response = await apiClient.get<ODataResponse<MetrixCodeTableRecord>>('METRIX_CODE_TABLE', {
       $select: 'code_value,message_id,active',
-      $filter: "code_name eq 'PERSON_STATUS'"
+      $filter: "code_name eq 'PERSON_STATUS' and active eq 'Y'"
     });
     
     return response.value.map(item => ({
@@ -115,22 +86,6 @@ export class MetadataService {
       name: item.name,
       code: item.code,
       isDefault: item.isDefault
-    }));
-  }
-
-  /**
-   * Fetch currency metadata
-   */
-  private async fetchCurrencies() {
-    const response = await apiClient.get<ODataResponse<CurrencyRecord>>('CURRENCIES', {
-      $select: 'code,name,symbol'
-    });
-    
-    return response.value.map(item => ({
-      id: item.code,
-      name: item.name,
-      code: item.code,
-      symbol: item.symbol
     }));
   }
 
@@ -165,21 +120,22 @@ export class MetadataService {
   }
 
   /**
-   * Check if metadata needs updating
+   * Check if there's a newer version of metadata available
    */
   public async checkMetadataVersion(): Promise<boolean> {
     try {
-      const storedVersion = localStorage.getItem(this.versionKey);
-      if (!storedVersion) return true;
-
-      const currentVersion: MetadataVersionInfo = JSON.parse(storedVersion);
-      const hoursSinceUpdate = this.getHoursSinceUpdate(currentVersion.lastUpdated);
+      const response = await apiClient.get<MetadataVersionInfo>('metadata/version');
+      const currentVersion = localStorage.getItem(this.versionKey);
       
-      // Update if more than 24 hours old
-      return hoursSinceUpdate >= 24;
+      if (!currentVersion || currentVersion !== response.version) {
+        localStorage.setItem(this.versionKey, response.version);
+        return true;
+      }
+      
+      return false;
     } catch (error) {
       console.error('Error checking metadata version:', error);
-      return true;
+      return false;
     }
   }
 
@@ -189,13 +145,9 @@ export class MetadataService {
   public async saveMetadata(metadata: Metadata): Promise<void> {
     try {
       localStorage.setItem(this.metadataKey, JSON.stringify(metadata));
-      localStorage.setItem(this.versionKey, JSON.stringify({
-        version: metadata.version,
-        lastUpdated: metadata.lastUpdated
-      }));
+      localStorage.setItem(this.versionKey, metadata.version);
     } catch (error) {
       console.error('Error saving metadata:', error);
-      throw error;
     }
   }
 
@@ -204,8 +156,11 @@ export class MetadataService {
    */
   public getStoredMetadata(): Metadata | null {
     try {
-      const stored = localStorage.getItem(this.metadataKey);
-      return stored ? JSON.parse(stored) : null;
+      const data = localStorage.getItem(this.metadataKey);
+      if (data) {
+        return JSON.parse(data) as Metadata;
+      }
+      return null;
     } catch (error) {
       console.error('Error getting stored metadata:', error);
       return null;
@@ -239,6 +194,15 @@ export class MetadataService {
     return data.value;
   }
 
+  private async fetchCurrencyData(): Promise<CurrencyRecord[]> {
+    const response = await fetch('/api/metadata/currency');
+    if (!response.ok) {
+      throw new Error('Failed to fetch currency data');
+    }
+    const data: CurrencyResponse = await response.json();
+    return data.value;
+  }
+
   private mapToDropdownOptions(records: MetrixCodeTableRecord[], isPersonStatus: boolean): DropdownOption[] {
     return records
       .map(record => ({
@@ -258,10 +222,20 @@ export class MetadataService {
       .sort((a, b) => a.label.localeCompare(b.label));
   }
 
+  private mapCurrencyToDropdownOptions(records: CurrencyRecord[]): DropdownOption[] {
+    return records
+      .map(record => ({
+        value: record.currency,
+        label: `${record.currency} - ${record.description}`
+      }))
+      .sort((a, b) => a.value.localeCompare(b.value));
+  }
+
   public async fetchMetadata(): Promise<MetadataState> {
-    const [metrixRecords, globalRecords] = await Promise.all([
+    const [metrixRecords, globalRecords, currencyRecords] = await Promise.all([
       this.fetchMetrixCodeTable(),
-      this.fetchGlobalCodeTable()
+      this.fetchGlobalCodeTable(),
+      this.fetchCurrencyData()
     ]);
     
     // Map Metrix Code Table records
@@ -284,6 +258,9 @@ export class MetadataService {
     const locations = this.mapGlobalCodeToDropdownOptions(globalRecords, 'PLACE_RELATIONSHIP');
     const addressTypes = this.mapGlobalCodeToDropdownOptions(globalRecords, 'ADDRESS_TYPE');
 
+    // Map Currency records
+    const currencies = this.mapCurrencyToDropdownOptions(currencyRecords);
+
     return {
       fsmLicenses,
       personStatuses,
@@ -293,7 +270,8 @@ export class MetadataService {
       accessGroups,
       personGroups,
       locations,
-      addressTypes
+      addressTypes,
+      currencies
     };
   }
 }
