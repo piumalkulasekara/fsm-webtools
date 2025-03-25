@@ -118,6 +118,18 @@ export interface CurrencyResponse {
   value: CurrencyRecord[];
 }
 
+export interface LocationRecord {
+  description: string;
+  location: string;
+  place_id: string;
+  usable: string;
+}
+
+export interface LocationResponse {
+  '@odata.context': string;
+  value: LocationRecord[];
+}
+
 export interface MetadataState {
   fsmLicenses: DropdownOption[];
   personStatuses: DropdownOption[];
@@ -126,7 +138,7 @@ export interface MetadataState {
   contractPostGroups: DropdownOption[];
   accessGroups: DropdownOption[];
   personGroups: DropdownOption[];
-  locations: DropdownOption[];
+  locations: LocationRecord[];
   addressTypes: DropdownOption[];
   currencies: DropdownOption[];
 } 

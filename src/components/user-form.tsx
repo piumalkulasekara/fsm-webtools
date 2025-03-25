@@ -167,9 +167,17 @@ export function UserForm() {
   const { options: contractPostGroupOptions, isLoading: contractPostGroupLoading, error: contractPostGroupError } = useContractPostGroupOptions();
   const { options: accessGroupOptions, isLoading: accessGroupLoading, error: accessGroupError } = useAccessGroupOptions();
   const { options: personGroupOptions, isLoading: personGroupLoading, error: personGroupError } = usePersonGroupOptions();
-  const { options: locationOptions, isLoading: locationLoading, error: locationError } = useLocationOptions();
   const { options: addressTypeOptions, isLoading: addressTypeLoading, error: addressTypeError } = useAddressTypeOptions();
   const { options: currencyOptions, isLoading: currencyLoading, error: currencyError } = useCurrencyOptions();
+  
+  // Use selected place for stock for filtering locations
+  const placeForStock = watch("placeForStock");
+  const { 
+    options: locationOptions, 
+    isLoading: locationLoading, 
+    error: locationError,
+    isDisabled: locationIsDisabled 
+  } = useLocationOptions(placeForStock);
 
   const onSubmit = (data: FormValues) => {
     console.log("Form submitted with values:", data);
@@ -540,9 +548,9 @@ export function UserForm() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="placeForStock">Place for Stock</Label>
                   <div className="grid grid-cols-12 gap-4">
-                    <div className="col-span-6">
+                    <div className="col-span-6 space-y-2">
+                      <Label htmlFor="placeForStock">Place for Stock</Label>
                       <Combobox
                         options={placesOptions}
                         value={watch("placeForStock") || ""}
@@ -555,18 +563,27 @@ export function UserForm() {
                         <p className="text-sm text-destructive">{errors.placeForStock.message}</p>
                       )}
                     </div>
-                    <div className="col-span-6">
+                    <div className="col-span-6 space-y-2">
+                      <Label htmlFor="stockLocation">Location</Label>
                       <Combobox
                         options={locationOptions}
                         value={watch("stockLocation") || ""}
                         onValueChange={(value) => handleComboboxChange("stockLocation", value)}
-                        placeholder={locationLoading ? "Loading..." : "Location"}
+                        placeholder={locationIsDisabled 
+                          ? "Select a Place for Stock first" 
+                          : (locationLoading ? "Loading..." : "Select Location")}
                         searchPlaceholder="Search locations..."
                         className={cn(comboboxStyles, getPlaceholderClass(watch("stockLocation")))}
+                        disabled={locationIsDisabled}
                       />
-                      {locationError && (
+                      {!locationIsDisabled && locationError && (
                         <p className="text-sm text-destructive">
                           {locationError.message || 'Failed to load location options'}
+                        </p>
+                      )}
+                      {locationIsDisabled && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Please select a Place for Stock to enable location selection
                         </p>
                       )}
                     </div>

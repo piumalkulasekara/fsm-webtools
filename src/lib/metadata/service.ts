@@ -1,5 +1,5 @@
 import { apiClient } from '../api/client';
-import type { Metadata, MetadataVersionInfo, MetrixCodeTableRecord, MetrixCodeTableResponse, GlobalCodeTableRecord, GlobalCodeTableResponse, DropdownOption, MetadataState, CurrencyRecord, CurrencyResponse } from './types';
+import type { Metadata, MetadataVersionInfo, MetrixCodeTableRecord, MetrixCodeTableResponse, GlobalCodeTableRecord, GlobalCodeTableResponse, DropdownOption, MetadataState, CurrencyRecord, CurrencyResponse, LocationRecord, LocationResponse } from './types';
 
 interface ODataResponse<T> {
   '@odata.context'?: string;
@@ -18,7 +18,7 @@ interface TeamRecord {
   type: string;
 }
 
-interface LocationRecord {
+interface OldLocationRecord {
   id: string;
   name: string;
   type: string;
@@ -108,7 +108,7 @@ export class MetadataService {
    * Fetch location metadata
    */
   private async fetchLocations() {
-    const response = await apiClient.get<ODataResponse<LocationRecord>>('LOCATIONS', {
+    const response = await apiClient.get<ODataResponse<OldLocationRecord>>('LOCATIONS', {
       $select: 'id,name,type'
     });
     
@@ -203,6 +203,15 @@ export class MetadataService {
     return data.value;
   }
 
+  private async fetchLocationData(): Promise<LocationRecord[]> {
+    const response = await fetch('/api/metadata/location');
+    if (!response.ok) {
+      throw new Error('Failed to fetch location data');
+    }
+    const data: LocationResponse = await response.json();
+    return data.value;
+  }
+
   private mapToDropdownOptions(records: MetrixCodeTableRecord[], isPersonStatus: boolean): DropdownOption[] {
     return records
       .map(record => ({
@@ -232,10 +241,11 @@ export class MetadataService {
   }
 
   public async fetchMetadata(): Promise<MetadataState> {
-    const [metrixRecords, globalRecords, currencyRecords] = await Promise.all([
+    const [metrixRecords, globalRecords, currencyRecords, locationRecords] = await Promise.all([
       this.fetchMetrixCodeTable(),
       this.fetchGlobalCodeTable(),
-      this.fetchCurrencyData()
+      this.fetchCurrencyData(),
+      this.fetchLocationData()
     ]);
     
     // Map Metrix Code Table records
@@ -257,9 +267,6 @@ export class MetadataService {
     const personGroups = this.mapGlobalCodeToDropdownOptions(globalRecords, 'PERSON_GROUP');
     const addressTypes = this.mapGlobalCodeToDropdownOptions(globalRecords, 'ADDRESS_TYPE');
 
-    // For location, return empty array as per requirements
-    const locations: DropdownOption[] = [];
-
     // Map Currency records
     const currencies = this.mapCurrencyToDropdownOptions(currencyRecords);
 
@@ -271,7 +278,7 @@ export class MetadataService {
       contractPostGroups,
       accessGroups,
       personGroups,
-      locations,
+      locations: locationRecords,  // Return the raw location records
       addressTypes,
       currencies
     };

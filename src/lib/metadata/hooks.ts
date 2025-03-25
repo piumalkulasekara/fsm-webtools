@@ -126,19 +126,37 @@ export function useTeamOptions(): {
 }
 
 /**
- * Hook to access location options
- * Note: Currently returns an empty array as location data fetching has been temporarily disabled
+ * Hook to access location options with filtering by place_id
  */
-export function useLocationOptions(): {
+export function useLocationOptions(placeForStock?: string): {
   options: DropdownOption[];
   isLoading: boolean;
   error: Error | null;
+  isDisabled: boolean;
 } {
   const { data, isLoading, error } = useMetadata();
+  
+  const options = useMemo(() => {
+    if (!data?.locations || !placeForStock) return [];
+    
+    // Filter locations by the selected place_id
+    return data.locations
+      .filter(loc => loc.place_id === placeForStock)
+      .map(loc => ({
+        value: loc.location,
+        label: loc.description
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [data?.locations, placeForStock]);
+
+  // Disabled if no place for stock is selected
+  const isDisabled = !placeForStock;
+
   return {
-    options: data?.locations ?? [],
+    options,
     isLoading,
     error,
+    isDisabled
   };
 }
 

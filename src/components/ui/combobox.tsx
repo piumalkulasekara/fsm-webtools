@@ -25,6 +25,7 @@ interface ComboboxProps {
   emptyMessage?: string;
   className?: string;
   searchPlaceholder?: string;
+  disabled?: boolean;
 }
 
 export function Combobox({
@@ -35,6 +36,7 @@ export function Combobox({
   emptyMessage = "No results found.",
   className,
   searchPlaceholder = "Search...",
+  disabled = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -59,15 +61,27 @@ export function Combobox({
     }
   }, [open]);
 
+  // Handle popover open state based on disabled prop
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!disabled) {
+      setOpen(newOpen);
+    }
+  };
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           ref={triggerRef}
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between", className)}
+          className={cn(
+            "w-full justify-between", 
+            disabled && "opacity-50 cursor-not-allowed",
+            className
+          )}
+          disabled={disabled}
         >
           {value
             ? safeOptions.find((option) => option.value === value)?.label || placeholder
