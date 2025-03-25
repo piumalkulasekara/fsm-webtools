@@ -173,4 +173,16 @@ export interface UserRoleRecord {
 export interface UserRoleResponse {
   '@odata.context': string;
   value: UserRoleRecord[];
+}
+
+export interface TeamRecord {
+  team_id: string;
+  description: string;
+  status: string;
+  access_group: string;
+}
+
+export interface TeamResponse {
+  '@odata.context': string;
+  value: TeamRecord[];
 } 

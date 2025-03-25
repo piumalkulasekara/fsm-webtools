@@ -1,5 +1,5 @@
 import { apiClient } from '../api/client';
-import type { Metadata, MetadataVersionInfo, MetrixCodeTableRecord, MetrixCodeTableResponse, GlobalCodeTableRecord, GlobalCodeTableResponse, DropdownOption, MetadataState, CurrencyRecord, CurrencyResponse, LocationRecord, LocationResponse, PlaceAddressRecord, PlaceAddressResponse, UserRoleRecord, UserRoleResponse } from './types';
+import type { Metadata, MetadataVersionInfo, MetrixCodeTableRecord, MetrixCodeTableResponse, GlobalCodeTableRecord, GlobalCodeTableResponse, DropdownOption, MetadataState, CurrencyRecord, CurrencyResponse, LocationRecord, LocationResponse, PlaceAddressRecord, PlaceAddressResponse, UserRoleRecord, UserRoleResponse, TeamRecord, TeamResponse } from './types';
 
 interface ODataResponse<T> {
   '@odata.context'?: string;
@@ -10,12 +10,6 @@ interface LanguageRecord {
   code: string;
   name: string;
   isDefault: boolean;
-}
-
-interface TeamRecord {
-  id: string;
-  name: string;
-  type: string;
 }
 
 interface OldLocationRecord {
@@ -90,10 +84,14 @@ export class MetadataService {
   }
 
   /**
-   * Fetch team metadata
+   * Fetch team metadata - Legacy method
    */
   private async fetchTeams() {
-    const response = await apiClient.get<ODataResponse<TeamRecord>>('TEAMS', {
+    const response = await apiClient.get<ODataResponse<{
+      id: string;
+      name: string;
+      type: string;
+    }>>('TEAMS', {
       $select: 'id,name,type'
     });
     
@@ -227,6 +225,15 @@ export class MetadataService {
       throw new Error('Failed to fetch user roles data');
     }
     const data: UserRoleResponse = await response.json();
+    return data.value;
+  }
+
+  private async fetchTeamsData(): Promise<TeamRecord[]> {
+    const response = await fetch('/api/metadata/teams');
+    if (!response.ok) {
+      throw new Error('Failed to fetch team data');
+    }
+    const data: TeamResponse = await response.json();
     return data.value;
   }
 

@@ -25,7 +25,8 @@ import {
   useCurrencyOptions,
   usePlaceOptions,
   useAddressOptions,
-  useUserRoleOptions
+  useUserRoleOptions,
+  useAllocatedTeamOptions
 } from "@/lib/metadata/hooks";
 
 // Define form schema for validation
@@ -74,14 +75,8 @@ const typeOptions: ComboboxOption[] = [
   { value: "technician", label: "Technician" },
 ];
 
-const allocatedTeamOptions: ComboboxOption[] = [
-  { value: "team-service", label: "Service Team" },
-  { value: "team-sales", label: "Sales Team" },
-  { value: "team-support", label: "Support Team" },
-  { value: "team-admin", label: "Administrative Team" },
-  { value: "team-management", label: "Management Team" },
-  { value: "team-development", label: "Development Team" },
-];
+// Remove hardcoded allocated team options
+// const allocatedTeamOptions: ComboboxOption[] = [...];
 
 // Remove hardcoded place options
 // const placesOptions: ComboboxOption[] = [...];
@@ -184,6 +179,14 @@ export function UserForm() {
     isLoading: rolesLoading, 
     error: rolesError 
   } = useUserRoleOptions();
+
+  // Use selected Lely Center for filtering teams
+  const lelyCenter = watch("lelyCenter");
+  const { 
+    options: allocatedTeamOptions, 
+    isLoading: allocatedTeamLoading, 
+    error: allocatedTeamError 
+  } = useAllocatedTeamOptions(lelyCenter);
 
   const onSubmit = (data: FormValues) => {
     console.log("Form submitted with values:", data);
@@ -492,10 +495,15 @@ export function UserForm() {
                 options={allocatedTeamOptions}
                 value={watch("allocatedTeam") || ""}
                 onValueChange={(value) => handleComboboxChange("allocatedTeam", value)}
-                placeholder="Select Allocated Team"
-                searchPlaceholder="Search Allocated Team..."
+                placeholder={allocatedTeamLoading ? "Loading teams..." : "Select Allocated Team"}
+                searchPlaceholder="Search teams..."
                 className={cn(comboboxStyles, getPlaceholderClass(watch("allocatedTeam")))}
               />
+              {allocatedTeamError && (
+                <p className="text-sm text-destructive">
+                  {allocatedTeamError.message || 'Failed to load team options'}
+                </p>
+              )}
               {errors.allocatedTeam && (
                 <p className="text-sm text-destructive">{errors.allocatedTeam.message}</p>
               )}

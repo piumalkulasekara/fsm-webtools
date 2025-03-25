@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MetadataService } from './service';
-import type { DropdownOption, MetadataState, Team, Metadata, PlaceAddressRecord, UserRoleRecord } from './types';
+import type { DropdownOption, MetadataState, Team, Metadata, PlaceAddressRecord, UserRoleRecord, TeamRecord } from './types';
 import type { MultiSelectOption } from '@/components/ui/multi-select';
 
 const metadataService = MetadataService.getInstance();
@@ -424,6 +424,61 @@ export function useUserRoleOptions(): {
       label: `${record.description} (${record.user_role})`
     })).sort((a, b) => a.label.localeCompare(b.label));
   }, [data]);
+
+  return {
+    options,
+    isLoading,
+    error
+  };
+}
+
+/**
+ * Hook to access team data
+ */
+export function useTeamData() {
+  const { data, isLoading, error } = useQuery<{ value: TeamRecord[] }, Error>({
+    queryKey: ['teams'],
+    queryFn: async () => {
+      const response = await fetch('/api/metadata/teams');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch team data: ${response.statusText}`);
+      }
+      return await response.json();
+    },
+    staleTime: 1000 * 60 * 60, // 1 hour
+    gcTime: Infinity,
+  });
+
+  return { 
+    data: data?.value ?? [], 
+    isLoading, 
+    error 
+  };
+}
+
+/**
+ * Hook to access allocated team options with filtering by access group (Lely Center)
+ */
+export function useAllocatedTeamOptions(lelyCenter?: string): {
+  options: DropdownOption[];
+  isLoading: boolean;
+  error: Error | null;
+} {
+  const { data, isLoading, error } = useTeamData();
+  
+  const options = useMemo(() => {
+    if (!data) return [];
+    
+    // If lelyCenter is provided, filter teams by access_group
+    const filteredTeams = lelyCenter 
+      ? data.filter(team => team.access_group === lelyCenter)
+      : data;
+    
+    return filteredTeams.map(team => ({
+      value: team.team_id,
+      label: `${team.description} (${team.access_group})`
+    })).sort((a, b) => a.label.localeCompare(b.label));
+  }, [data, lelyCenter]);
 
   return {
     options,
