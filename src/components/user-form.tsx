@@ -12,6 +12,7 @@ import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { AddressMultiSelect } from "@/components/ui/address-multi-select";
 import { PersonStatusDropdown } from "@/components/ui/dropdowns/PersonStatusDropdown";
 import { 
   useFsmLicenseOptions,
@@ -56,7 +57,7 @@ const formSchema = z.object({
   placeForStock: z.string().optional(),
   stockLocation: z.string().optional(),
   addressType: z.string().default("DEFAULT"),
-  address: z.string().optional(),
+  address: z.array(z.string()).default([]),
   fsmLicense: z.string().optional(),
   mobileUser: z.boolean().default(false),
   dispatchable: z.boolean().default(false),
@@ -100,6 +101,7 @@ export function UserForm() {
   const [rolesLicenseExpanded, setRolesLicenseExpanded] = useState(true);
   const [viewAllTeams, setViewAllTeams] = useState(false);
   const [viewAllAddresses, setViewAllAddresses] = useState(false);
+  const [addressTypeMap, setAddressTypeMap] = useState<Record<string, string>>({});
   
   const {
     register,
@@ -134,7 +136,7 @@ export function UserForm() {
       placeForStock: "",
       stockLocation: "",
       addressType: "DEFAULT",
-      address: "",
+      address: [],
       fsmLicense: "",
       mobileUser: false,
       dispatchable: false,
@@ -218,8 +220,10 @@ export function UserForm() {
   };
 
   // Function to get the placeholder class
-  const getPlaceholderClass = (value: string | undefined) => {
-    return !value ? placeholderStyles : "";
+  const getPlaceholderClass = (value: string | string[] | undefined) => {
+    if (!value) return placeholderStyles;
+    if (Array.isArray(value) && value.length === 0) return placeholderStyles;
+    return "";
   };
 
   // Function to handle multi-select changes
@@ -235,6 +239,58 @@ export function UserForm() {
   // Toggle function for view all addresses
   const toggleViewAllAddresses = () => {
     setViewAllAddresses(!viewAllAddresses);
+  };
+
+  // Function to handle address selection
+  const handleAddressChange = (values: string[]) => {
+    const currentAddressType = watch("addressType");
+    const currentAddresses = watch("address") || [];
+    
+    // Find new addresses not in the current list
+    const newAddresses = values.filter(v => !currentAddresses.includes(v));
+    
+    if (newAddresses.length > 0) {
+      // Check if we're trying to add a DEFAULT type address when one already exists
+      const isDefaultType = currentAddressType === "DEFAULT";
+      if (isDefaultType) {
+        const hasDefaultAlready = Object.values(addressTypeMap).includes("DEFAULT");
+        
+        if (hasDefaultAlready) {
+          // Alert the user and don't add the new addresses
+          alert("Only one DEFAULT address is allowed. Please select a different address type.");
+          return;
+        }
+      }
+      
+      // Store the address type for each new address
+      const updatedTypeMap = { ...addressTypeMap };
+      newAddresses.forEach(address => {
+        updatedTypeMap[address] = currentAddressType;
+      });
+      setAddressTypeMap(updatedTypeMap);
+    }
+    
+    // Update the form value
+    setValue("address", values, { shouldValidate: true });
+  };
+  
+  // Function to get address type name
+  const getAddressTypeName = (addressId: string): string => {
+    return addressTypeMap[addressId] || "UNKNOWN";
+  };
+  
+  // Function to remove an address
+  const removeAddress = (addressId: string) => {
+    const currentAddresses = watch("address") || [];
+    const updatedAddresses = currentAddresses.filter(id => id !== addressId);
+    
+    // Update the form value
+    setValue("address", updatedAddresses, { shouldValidate: true });
+    
+    // Remove from type map
+    const updatedTypeMap = { ...addressTypeMap };
+    delete updatedTypeMap[addressId];
+    setAddressTypeMap(updatedTypeMap);
   };
 
   return (
@@ -663,6 +719,9 @@ export function UserForm() {
                 </div>
               </div>
 
+              {/* Divider between Location and Address sections */}
+              <div className="h-px bg-border my-4"></div>
+
               {/* Address Type and Address in a separate grid row */}
               <div className="grid grid-cols-12 gap-4 mt-4">
                 <div className="col-span-4 space-y-2">
@@ -702,26 +761,70 @@ export function UserForm() {
                       Addresses filtered by Country: {startWorkFromCountry}
                     </p>
                   )}
-                  <Combobox
-                    options={addressOptionsFromApi}
-                    value={watch("address") || ""}
-                    onValueChange={(value) => handleComboboxChange("address", value)}
-                    placeholder={
-                      addressesLoading || countryLoading 
-                        ? "Loading addresses..." 
-                        : "Select Address"
-                    }
-                    searchPlaceholder="Search addresses..."
-                    className={cn(comboboxStyles, getPlaceholderClass(watch("address")))}
-                  />
-                  {addressesError && (
-                    <p className="text-sm text-destructive">
-                      {addressesError.message || 'Failed to load address options'}
-                    </p>
-                  )}
-                  {errors.address && (
-                    <p className="text-sm text-destructive">{errors.address.message}</p>
-                  )}
+                  {/* Custom MultiSelect Implementation */}
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <AddressMultiSelect
+                        options={addressOptionsFromApi}
+                        values={watch("address") || []}
+                        onValuesChange={(values) => handleAddressChange(values)}
+                        placeholder={
+                          addressesLoading || countryLoading 
+                            ? "Loading addresses..." 
+                            : "Select Address"
+                        }
+                        searchPlaceholder="Search addresses..."
+                        className={cn(comboboxStyles, getPlaceholderClass(watch("address")))}
+                        closeOnSelect={false}
+                      />
+                    </div>
+                    {addressesError && (
+                      <p className="text-sm text-destructive">
+                        {addressesError.message || 'Failed to load address options'}
+                      </p>
+                    )}
+                    {errors.address && (
+                      <p className="text-sm text-destructive">{errors.address.message}</p>
+                    )}
+                  </div>
+                  
+                  {/* Selected addresses display area - full width */}
+                  <div className="mt-2 space-y-1 w-full">
+                    {(watch("address") || []).map((addressId, index) => {
+                      const addressOption = addressOptionsFromApi.find(option => option.value === addressId);
+                      const addressTypeName = getAddressTypeName(addressId);
+                      const isDefaultType = addressTypeName === 'DEFAULT';
+                      
+                      return (
+                        <div 
+                          key={`${addressId}-${index}`} 
+                          className="flex items-center justify-between p-2 rounded-md bg-muted/50 border border-border w-full"
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className={cn(
+                              "text-xs px-2 py-1 rounded font-medium shrink-0",
+                              isDefaultType ? "bg-primary/20 text-primary" : "bg-secondary/20 text-secondary"
+                            )}>
+                              {addressTypeName}
+                            </span>
+                            <span className="text-sm truncate">{addressOption?.label || addressId}</span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 rounded-full hover:bg-muted shrink-0"
+                            onClick={() => removeAddress(addressId)}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <line x1="18" y1="6" x2="6" y2="18"></line>
+                              <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
