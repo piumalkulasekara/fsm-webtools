@@ -459,8 +459,8 @@ export function useTeamData() {
 /**
  * Hook to access allocated team options with filtering by access group (Lely Center)
  */
-export function useAllocatedTeamOptions(lelyCenter?: string): {
-  options: DropdownOption[];
+export function useAllocatedTeamOptions(lelyCenter?: string, viewAllTeams: boolean = false): {
+  options: MultiSelectOption[];
   isLoading: boolean;
   error: Error | null;
 } {
@@ -469,16 +469,19 @@ export function useAllocatedTeamOptions(lelyCenter?: string): {
   const options = useMemo(() => {
     if (!data) return [];
     
-    // If lelyCenter is provided, filter teams by access_group
-    const filteredTeams = lelyCenter 
-      ? data.filter(team => team.access_group === lelyCenter)
-      : data;
+    // If viewAllTeams is true, return all teams regardless of lelyCenter
+    // Otherwise, if lelyCenter is provided, filter teams by access_group
+    const filteredTeams = viewAllTeams 
+      ? data 
+      : (lelyCenter 
+        ? data.filter(team => team.access_group === lelyCenter)
+        : data);
     
     return filteredTeams.map(team => ({
       value: team.team_id,
       label: `${team.description} (${team.access_group})`
     })).sort((a, b) => a.label.localeCompare(b.label));
-  }, [data, lelyCenter]);
+  }, [data, lelyCenter, viewAllTeams]);
 
   return {
     options,

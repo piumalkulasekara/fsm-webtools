@@ -39,7 +39,7 @@ const formSchema = z.object({
   sso: z.boolean().default(false),
   language: z.string().optional(),
   lelyCenter: z.string().optional(),
-  allocatedTeam: z.string().optional(),
+  allocatedTeam: z.array(z.string()).default([]),
   employee: z.boolean().default(false),
   jobTitle: z.string().optional(),
   personStatus: z.string().default("active"),
@@ -97,6 +97,7 @@ export function UserForm() {
   const [generalInfoExpanded, setGeneralInfoExpanded] = useState(true);
   const [teamDetailsExpanded, setTeamDetailsExpanded] = useState(true);
   const [rolesLicenseExpanded, setRolesLicenseExpanded] = useState(true);
+  const [viewAllTeams, setViewAllTeams] = useState(false);
   
   const {
     register,
@@ -115,7 +116,7 @@ export function UserForm() {
       sso: false,
       language: "",
       lelyCenter: "",
-      allocatedTeam: "",
+      allocatedTeam: [],
       employee: false,
       jobTitle: "",
       personStatus: "",
@@ -186,7 +187,7 @@ export function UserForm() {
     options: allocatedTeamOptions, 
     isLoading: allocatedTeamLoading, 
     error: allocatedTeamError 
-  } = useAllocatedTeamOptions(lelyCenter);
+  } = useAllocatedTeamOptions(lelyCenter, viewAllTeams);
 
   const onSubmit = (data: FormValues) => {
     console.log("Form submitted with values:", data);
@@ -213,6 +214,11 @@ export function UserForm() {
   // Function to handle multi-select changes
   const handleMultiSelectChange = (field: keyof FormValues, values: string[]) => {
     setValue(field, values, { shouldValidate: true });
+  };
+
+  // Toggle function for view all teams
+  const toggleViewAllTeams = () => {
+    setViewAllTeams(!viewAllTeams);
   };
 
   return (
@@ -490,14 +496,31 @@ export function UserForm() {
             <div className="h-px bg-border my-2"></div>
             
             <div className="space-y-2">
-              <Label htmlFor="allocatedTeam">Allocated Team</Label>
-              <Combobox
+              <div className="flex justify-between items-center">
+                <Label htmlFor="allocatedTeam">Allocated Team</Label>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={toggleViewAllTeams}
+                  className="h-7 text-xs"
+                >
+                  {viewAllTeams ? "Show Filtered Teams" : "Show All Teams"}
+                </Button>
+              </div>
+              {!viewAllTeams && lelyCenter && (
+                <p className="text-xs text-muted-foreground">
+                  Teams filtered by Access Group: {lelyCenter}
+                </p>
+              )}
+              <MultiSelect
                 options={allocatedTeamOptions}
-                value={watch("allocatedTeam") || ""}
-                onValueChange={(value) => handleComboboxChange("allocatedTeam", value)}
+                values={watch("allocatedTeam") || []}
+                onValuesChange={(values) => handleMultiSelectChange("allocatedTeam", values)}
                 placeholder={allocatedTeamLoading ? "Loading teams..." : "Select Allocated Team"}
                 searchPlaceholder="Search teams..."
-                className={cn(comboboxStyles, getPlaceholderClass(watch("allocatedTeam")))}
+                badgeVariant="secondary"
+                closeOnSelect={true}
               />
               {allocatedTeamError && (
                 <p className="text-sm text-destructive">
