@@ -22,7 +22,9 @@ import {
   usePersonGroupOptions,
   useLocationOptions,
   useAddressTypeOptions,
-  useCurrencyOptions
+  useCurrencyOptions,
+  usePlaceOptions,
+  useAddressOptions
 } from "@/lib/metadata/hooks";
 
 // Define form schema for validation
@@ -80,22 +82,11 @@ const allocatedTeamOptions: ComboboxOption[] = [
   { value: "team-development", label: "Development Team" },
 ];
 
-const placesOptions: ComboboxOption[] = [
-  { value: "place-hq", label: "Headquarters" },
-  { value: "place-warehouse", label: "Warehouse" },
-  { value: "place-distribution", label: "Distribution Center" },
-  { value: "place-service-center", label: "Service Center" },
-  { value: "place-field-office", label: "Field Office" },
-  { value: "place-customer-site", label: "Customer Site" },
-];
+// Remove hardcoded place options
+// const placesOptions: ComboboxOption[] = [...];
 
-const addressOptions: ComboboxOption[] = [
-  { value: "addr-1", label: "123 Main St, City, State" },
-  { value: "addr-2", label: "456 Oak Ave, City, State" },
-  { value: "addr-3", label: "789 Pine Rd, City, State" },
-  { value: "addr-4", label: "321 Elm Blvd, City, State" },
-  { value: "addr-5", label: "654 Maple Ln, City, State" },
-];
+// Remove hardcoded addressOptions array since we're using the hook
+// const addressOptions: ComboboxOption[] = [...];
 
 const roleOptions: MultiSelectOption[] = [
   { value: "role-admin", label: "Administrator" },
@@ -178,6 +169,19 @@ export function UserForm() {
     error: locationError,
     isDisabled: locationIsDisabled 
   } = useLocationOptions(placeForStock);
+
+  // Add place options hook
+  const { 
+    options: placeOptions, 
+    isLoading: placesLoading, 
+    error: placesError 
+  } = usePlaceOptions();
+  
+  const { 
+    options: addressOptionsFromApi, 
+    isLoading: addressesLoading, 
+    error: addressesError 
+  } = useAddressOptions();
 
   const onSubmit = (data: FormValues) => {
     console.log("Form submitted with values:", data);
@@ -505,13 +509,18 @@ export function UserForm() {
                 <div className="space-y-2">
                   <Label htmlFor="startWorkFrom">Start Work From</Label>
                   <Combobox
-                    options={placesOptions}
+                    options={placeOptions}
                     value={watch("startWorkFrom") || ""}
                     onValueChange={(value) => handleComboboxChange("startWorkFrom", value)}
-                    placeholder="Select Starting Place"
+                    placeholder={placesLoading ? "Loading places..." : "Select Starting Place"}
                     searchPlaceholder="Search places..."
                     className={cn(comboboxStyles, getPlaceholderClass(watch("startWorkFrom")))}
                   />
+                  {placesError && (
+                    <p className="text-sm text-destructive">
+                      {placesError.message || 'Failed to load places'}
+                    </p>
+                  )}
                   {errors.startWorkFrom && (
                     <p className="text-sm text-destructive">{errors.startWorkFrom.message}</p>
                   )}
@@ -520,13 +529,18 @@ export function UserForm() {
                 <div className="space-y-2">
                   <Label htmlFor="worksFromPlace">Works From Place</Label>
                   <Combobox
-                    options={placesOptions}
+                    options={placeOptions}
                     value={watch("worksFromPlace") || ""}
                     onValueChange={(value) => handleComboboxChange("worksFromPlace", value)}
-                    placeholder="Select Work Place"
+                    placeholder={placesLoading ? "Loading places..." : "Select Work Place"}
                     searchPlaceholder="Search places..."
                     className={cn(comboboxStyles, getPlaceholderClass(watch("worksFromPlace")))}
                   />
+                  {placesError && (
+                    <p className="text-sm text-destructive">
+                      {placesError.message || 'Failed to load places'}
+                    </p>
+                  )}
                   {errors.worksFromPlace && (
                     <p className="text-sm text-destructive">{errors.worksFromPlace.message}</p>
                   )}
@@ -535,13 +549,18 @@ export function UserForm() {
                 <div className="space-y-2">
                   <Label htmlFor="endsWorkAt">Ends Work At</Label>
                   <Combobox
-                    options={placesOptions}
+                    options={placeOptions}
                     value={watch("endsWorkAt") || ""}
                     onValueChange={(value) => handleComboboxChange("endsWorkAt", value)}
-                    placeholder="Select Ending Place"
+                    placeholder={placesLoading ? "Loading places..." : "Select Ending Place"}
                     searchPlaceholder="Search places..."
                     className={cn(comboboxStyles, getPlaceholderClass(watch("endsWorkAt")))}
                   />
+                  {placesError && (
+                    <p className="text-sm text-destructive">
+                      {placesError.message || 'Failed to load places'}
+                    </p>
+                  )}
                   {errors.endsWorkAt && (
                     <p className="text-sm text-destructive">{errors.endsWorkAt.message}</p>
                   )}
@@ -552,13 +571,18 @@ export function UserForm() {
                     <div className="col-span-6 space-y-2">
                       <Label htmlFor="placeForStock">Place for Stock</Label>
                       <Combobox
-                        options={placesOptions}
+                        options={placeOptions}
                         value={watch("placeForStock") || ""}
                         onValueChange={(value) => handleComboboxChange("placeForStock", value)}
-                        placeholder="Select Stock Place"
+                        placeholder={placesLoading ? "Loading places..." : "Select Stock Place"}
                         searchPlaceholder="Search places..."
                         className={cn(comboboxStyles, getPlaceholderClass(watch("placeForStock")))}
                       />
+                      {placesError && (
+                        <p className="text-sm text-destructive">
+                          {placesError.message || 'Failed to load places'}
+                        </p>
+                      )}
                       {errors.placeForStock && (
                         <p className="text-sm text-destructive">{errors.placeForStock.message}</p>
                       )}
@@ -612,13 +636,18 @@ export function UserForm() {
                 <div className="col-span-8 space-y-2">
                   <Label htmlFor="address">Address</Label>
                   <Combobox
-                    options={addressOptions}
+                    options={addressOptionsFromApi}
                     value={watch("address") || ""}
                     onValueChange={(value) => handleComboboxChange("address", value)}
-                    placeholder="Select Address"
+                    placeholder={addressesLoading ? "Loading addresses..." : "Select Address"}
                     searchPlaceholder="Search addresses..."
                     className={cn(comboboxStyles, getPlaceholderClass(watch("address")))}
                   />
+                  {addressesError && (
+                    <p className="text-sm text-destructive">
+                      {addressesError.message || 'Failed to load address options'}
+                    </p>
+                  )}
                   {errors.address && (
                     <p className="text-sm text-destructive">{errors.address.message}</p>
                   )}

@@ -1,5 +1,5 @@
 import { apiClient } from '../api/client';
-import type { Metadata, MetadataVersionInfo, MetrixCodeTableRecord, MetrixCodeTableResponse, GlobalCodeTableRecord, GlobalCodeTableResponse, DropdownOption, MetadataState, CurrencyRecord, CurrencyResponse, LocationRecord, LocationResponse } from './types';
+import type { Metadata, MetadataVersionInfo, MetrixCodeTableRecord, MetrixCodeTableResponse, GlobalCodeTableRecord, GlobalCodeTableResponse, DropdownOption, MetadataState, CurrencyRecord, CurrencyResponse, LocationRecord, LocationResponse, PlaceAddressRecord, PlaceAddressResponse } from './types';
 
 interface ODataResponse<T> {
   '@odata.context'?: string;
@@ -209,6 +209,15 @@ export class MetadataService {
       throw new Error('Failed to fetch location data');
     }
     const data: LocationResponse = await response.json();
+    return data.value;
+  }
+
+  private async fetchPlacesAddressData(): Promise<PlaceAddressRecord[]> {
+    const response = await fetch('/api/metadata/places');
+    if (!response.ok) {
+      throw new Error('Failed to fetch places and addresses data');
+    }
+    const data: PlaceAddressResponse = await response.json();
     return data.value;
   }
 

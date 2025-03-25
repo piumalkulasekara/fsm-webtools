@@ -141,4 +141,26 @@ export interface MetadataState {
   locations: LocationRecord[];
   addressTypes: DropdownOption[];
   currencies: DropdownOption[];
+}
+
+export interface PlaceAddressRecord {
+  place_id: string;
+  whos_place: string;
+  name: string;
+  address_id: string;
+  address_type: string;
+  address_name: string;
+  address: string;
+  second_address?: string;
+  third_address?: string;
+  fourth_address?: string;
+  city?: string;
+  state_prov?: string;
+  zippost?: string;
+  country?: string;
+}
+
+export interface PlaceAddressResponse {
+  '@odata.context': string;
+  value: PlaceAddressRecord[];
 } 

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MetadataService } from './service';
-import type { DropdownOption, MetadataState, Team, Metadata } from './types';
+import type { DropdownOption, MetadataState, Team, Metadata, PlaceAddressRecord } from './types';
 
 const metadataService = MetadataService.getInstance();
 const METADATA_QUERY_KEY = ['metadata'];
@@ -126,6 +126,111 @@ export function useTeamOptions(): {
 }
 
 /**
+ * Hook to access place-address data
+ */
+export function usePlaceAddressData() {
+  const { data, isLoading, error } = useQuery<{ value: PlaceAddressRecord[] }, Error>({
+    queryKey: ['placeAddress'],
+    queryFn: async () => {
+      const response = await fetch('/api/metadata/places');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch place-address data: ${response.statusText}`);
+      }
+      return await response.json();
+    },
+    staleTime: 1000 * 60 * 60, // 1 hour
+    gcTime: Infinity,
+  });
+
+  return { 
+    data: data?.value ?? [], 
+    isLoading, 
+    error 
+  };
+}
+
+/**
+ * Hook to access place options (for all place-related dropdowns)
+ */
+export function usePlaceOptions(): {
+  options: DropdownOption[];
+  isLoading: boolean;
+  error: Error | null;
+} {
+  const { data, isLoading, error } = usePlaceAddressData();
+  
+  const options = useMemo(() => {
+    if (!data) return [];
+    
+    // Create a Set to track unique place_ids we've already processed
+    const processedPlaceIds = new Set<string>();
+    const placeOptions: DropdownOption[] = [];
+    
+    // Process each record
+    data.forEach(record => {
+      // Only process each place_id once
+      if (!processedPlaceIds.has(record.place_id)) {
+        processedPlaceIds.add(record.place_id);
+        
+        placeOptions.push({
+          value: record.place_id,
+          label: `${record.whos_place} - ${record.name}`
+        });
+      }
+    });
+    
+    // Sort by label
+    return placeOptions.sort((a, b) => a.label.localeCompare(b.label));
+  }, [data]);
+
+  return {
+    options,
+    isLoading,
+    error
+  };
+}
+
+/**
+ * Hook to access address options
+ */
+export function useAddressOptions(): {
+  options: DropdownOption[];
+  isLoading: boolean;
+  error: Error | null;
+} {
+  const { data, isLoading, error } = usePlaceAddressData();
+  
+  const options = useMemo(() => {
+    if (!data) return [];
+    
+    return data.map(record => {
+      // Combine address parts, filtering out undefined values
+      const addressParts = [
+        record.address,
+        record.second_address,
+        record.third_address,
+        record.fourth_address,
+        record.city,
+        record.state_prov,
+        record.zippost,
+        record.country
+      ].filter(part => part);
+      
+      return {
+        value: record.address_id,
+        label: addressParts.join(', ')
+      };
+    }).sort((a, b) => a.label.localeCompare(b.label));
+  }, [data]);
+
+  return {
+    options,
+    isLoading,
+    error
+  };
+}
+
+/**
  * Hook to access location options with filtering by place_id
  */
 export function useLocationOptions(placeForStock?: string): {
@@ -148,6 +253,57 @@ export function useLocationOptions(placeForStock?: string): {
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [data?.locations, placeForStock]);
+
+  // Disabled if no place for stock is selected
+  const isDisabled = !placeForStock;
+
+  return {
+    options,
+    isLoading,
+    error,
+    isDisabled
+  };
+}
+
+/**
+ * Enhanced location options hook that works with the new place-address data
+ */
+export function useLocationOptionsFromPlaces(placeForStock?: string): {
+  options: DropdownOption[];
+  isLoading: boolean;
+  error: Error | null;
+  isDisabled: boolean;
+} {
+  const { data, isLoading, error } = usePlaceAddressData();
+  
+  const options = useMemo(() => {
+    if (!data || !placeForStock) return [];
+    
+    // Create a Set to track unique locations we've already processed for this place
+    const processedLocations = new Set<string>();
+    const locationOptions: DropdownOption[] = [];
+    
+    // Filter for locations that match the place_id
+    data.forEach(record => {
+      if (record.place_id === placeForStock) {
+        // We don't have location data in this view, so we'd need to add
+        // logic to extract location information if available
+        // For now, just placeholder
+        const locationId = `${record.place_id}-loc`;
+        
+        if (!processedLocations.has(locationId)) {
+          processedLocations.add(locationId);
+          
+          locationOptions.push({
+            value: locationId,
+            label: `Location for ${record.name}`
+          });
+        }
+      }
+    });
+    
+    return locationOptions.sort((a, b) => a.label.localeCompare(b.label));
+  }, [data, placeForStock]);
 
   // Disabled if no place for stock is selected
   const isDisabled = !placeForStock;
