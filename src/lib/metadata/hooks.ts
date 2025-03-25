@@ -192,9 +192,9 @@ export function usePlaceOptions(): {
 }
 
 /**
- * Hook to access address options
+ * Hook to access address options with optional country filtering
  */
-export function useAddressOptions(): {
+export function useAddressOptions(countryFilter?: string): {
   options: DropdownOption[];
   isLoading: boolean;
   error: Error | null;
@@ -204,7 +204,12 @@ export function useAddressOptions(): {
   const options = useMemo(() => {
     if (!data) return [];
     
-    return data.map(record => {
+    // If countryFilter is provided, filter addresses by country
+    const filteredData = countryFilter 
+      ? data.filter(record => record.country === countryFilter)
+      : data;
+    
+    return filteredData.map(record => {
       // Combine address parts, filtering out undefined values
       const addressParts = [
         record.address,
@@ -222,7 +227,7 @@ export function useAddressOptions(): {
         label: addressParts.join(', ')
       };
     }).sort((a, b) => a.label.localeCompare(b.label));
-  }, [data]);
+  }, [data, countryFilter]);
 
   return {
     options,
@@ -485,6 +490,31 @@ export function useAllocatedTeamOptions(lelyCenter?: string, viewAllTeams: boole
 
   return {
     options,
+    isLoading,
+    error
+  };
+}
+
+/**
+ * Hook to get the country code for a selected place ID
+ */
+export function usePlaceCountry(placeId?: string): {
+  country: string | undefined;
+  isLoading: boolean;
+  error: Error | null;
+} {
+  const { data, isLoading, error } = usePlaceAddressData();
+  
+  const country = useMemo(() => {
+    if (!data || !placeId) return undefined;
+    
+    // Find the first record with matching place_id and extract its country
+    const placeRecord = data.find(record => record.place_id === placeId);
+    return placeRecord?.country;
+  }, [data, placeId]);
+
+  return {
+    country,
     isLoading,
     error
   };

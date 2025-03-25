@@ -26,7 +26,8 @@ import {
   usePlaceOptions,
   useAddressOptions,
   useUserRoleOptions,
-  useAllocatedTeamOptions
+  useAllocatedTeamOptions,
+  usePlaceCountry
 } from "@/lib/metadata/hooks";
 
 // Define form schema for validation
@@ -98,6 +99,7 @@ export function UserForm() {
   const [teamDetailsExpanded, setTeamDetailsExpanded] = useState(true);
   const [rolesLicenseExpanded, setRolesLicenseExpanded] = useState(true);
   const [viewAllTeams, setViewAllTeams] = useState(false);
+  const [viewAllAddresses, setViewAllAddresses] = useState(false);
   
   const {
     register,
@@ -161,6 +163,21 @@ export function UserForm() {
     isDisabled: locationIsDisabled 
   } = useLocationOptions(placeForStock);
 
+  // Use selected start work from place for filtering addresses by country
+  const startWorkFrom = watch("startWorkFrom");
+  const {
+    country: startWorkFromCountry,
+    isLoading: countryLoading
+  } = usePlaceCountry(startWorkFrom);
+  
+  // Use country filter for addresses if a place is selected and viewAllAddresses is false
+  const filterCountry = !viewAllAddresses && startWorkFromCountry ? startWorkFromCountry : undefined;
+  const { 
+    options: addressOptionsFromApi, 
+    isLoading: addressesLoading, 
+    error: addressesError 
+  } = useAddressOptions(filterCountry);
+
   // Add place options hook
   const { 
     options: placeOptions, 
@@ -168,12 +185,6 @@ export function UserForm() {
     error: placesError 
   } = usePlaceOptions();
   
-  const { 
-    options: addressOptionsFromApi, 
-    isLoading: addressesLoading, 
-    error: addressesError 
-  } = useAddressOptions();
-
   // Add user role options hook
   const { 
     options: roleOptions, 
@@ -219,6 +230,11 @@ export function UserForm() {
   // Toggle function for view all teams
   const toggleViewAllTeams = () => {
     setViewAllTeams(!viewAllTeams);
+  };
+
+  // Toggle function for view all addresses
+  const toggleViewAllAddresses = () => {
+    setViewAllAddresses(!viewAllAddresses);
   };
 
   return (
@@ -650,7 +666,9 @@ export function UserForm() {
               {/* Address Type and Address in a separate grid row */}
               <div className="grid grid-cols-12 gap-4 mt-4">
                 <div className="col-span-4 space-y-2">
-                  <Label htmlFor="addressType">Address Type</Label>
+                  <div className="h-[32px] flex items-center">
+                    <Label htmlFor="addressType">Address Type</Label>
+                  </div>
                   <Combobox
                     options={addressTypeOptions}
                     value={watch("addressType")}
@@ -665,13 +683,34 @@ export function UserForm() {
                     </p>
                   )}
                 </div>
+                
                 <div className="col-span-8 space-y-2">
-                  <Label htmlFor="address">Address</Label>
+                  <div className="flex justify-between items-center h-[32px]">
+                    <Label htmlFor="address">Address</Label>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={toggleViewAllAddresses}
+                      className="h-7 text-xs"
+                    >
+                      {viewAllAddresses ? "Filter by Country" : "Show All Addresses"}
+                    </Button>
+                  </div>
+                  {!viewAllAddresses && startWorkFromCountry && (
+                    <p className="text-xs text-muted-foreground -mt-1 mb-1">
+                      Addresses filtered by Country: {startWorkFromCountry}
+                    </p>
+                  )}
                   <Combobox
                     options={addressOptionsFromApi}
                     value={watch("address") || ""}
                     onValueChange={(value) => handleComboboxChange("address", value)}
-                    placeholder={addressesLoading ? "Loading addresses..." : "Select Address"}
+                    placeholder={
+                      addressesLoading || countryLoading 
+                        ? "Loading addresses..." 
+                        : "Select Address"
+                    }
                     searchPlaceholder="Search addresses..."
                     className={cn(comboboxStyles, getPlaceholderClass(watch("address")))}
                   />
