@@ -14,6 +14,7 @@ import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { AddressMultiSelect } from "@/components/ui/address-multi-select";
 import { PersonStatusDropdown } from "@/components/ui/dropdowns/PersonStatusDropdown";
+import { toast } from "sonner";
 import { 
   useFsmLicenseOptions,
   useLanguageOptions,
@@ -256,8 +257,16 @@ export function UserForm() {
         const hasDefaultAlready = Object.values(addressTypeMap).includes("DEFAULT");
         
         if (hasDefaultAlready) {
-          // Alert the user and don't add the new addresses
-          alert("Only one DEFAULT address is allowed. Please select a different address type.");
+          // Use toast instead of alert for better UX with close button and error styling
+          toast.error("DEFAULT address is already added. Please select a different address type.", {
+            duration: 3000,
+            closeButton: false,
+            style: {
+              backgroundColor: '#FEE2E2',
+              color: '#B91C1C',
+              border: '1px solid #F87171'
+            }
+          });
           return;
         }
       }
@@ -270,13 +279,47 @@ export function UserForm() {
       setAddressTypeMap(updatedTypeMap);
     }
     
+    // Check for removed addresses
+    const removedAddresses = currentAddresses.filter(v => !values.includes(v));
+    if (removedAddresses.length > 0) {
+      const updatedTypeMap = { ...addressTypeMap };
+      removedAddresses.forEach(address => {
+        delete updatedTypeMap[address];
+      });
+      setAddressTypeMap(updatedTypeMap);
+    }
+    
+    // For addresses that had no type assigned but are still in the values list,
+    // set them to the current address type (useful for initial loading)
+    const missingTypeAddresses = values.filter(v => !addressTypeMap[v]);
+    if (missingTypeAddresses.length > 0) {
+      const updatedTypeMap = { ...addressTypeMap };
+      missingTypeAddresses.forEach(address => {
+        // If it's first and there's no DEFAULT yet, make it DEFAULT, 
+        // otherwise use the current address type (or IFS as fallback)
+        const hasDefaultAlready = Object.values(updatedTypeMap).includes("DEFAULT");
+        if (values.indexOf(address) === 0 && !hasDefaultAlready) {
+          updatedTypeMap[address] = "DEFAULT";
+        } else {
+          updatedTypeMap[address] = currentAddressType || "IFS";
+        }
+      });
+      setAddressTypeMap(updatedTypeMap);
+    }
+    
     // Update the form value
     setValue("address", values, { shouldValidate: true });
   };
   
   // Function to get address type name
   const getAddressTypeName = (addressId: string): string => {
-    return addressTypeMap[addressId] || "UNKNOWN";
+    // If we have an entry in the map, use it
+    if (addressTypeMap[addressId]) {
+      return addressTypeMap[addressId];
+    }
+    
+    // Default to IFS for addresses without a type
+    return "IFS";
   };
   
   // Function to remove an address
@@ -789,21 +832,35 @@ export function UserForm() {
                   </div>
                   
                   {/* Selected addresses display area - full width */}
-                  <div className="mt-2 space-y-1 w-full">
+                  <div className="mt-2 space-y-1 w-full col-span-full">
                     {(watch("address") || []).map((addressId, index) => {
                       const addressOption = addressOptionsFromApi.find(option => option.value === addressId);
                       const addressTypeName = getAddressTypeName(addressId);
-                      const isDefaultType = addressTypeName === 'DEFAULT';
+                      
+                      // Get badge color based on address type
+                      const getBadgeColor = (type: string) => {
+                        switch(type) {
+                          case 'DEFAULT': return "bg-green-100 text-green-700 border-green-300";
+                          case 'INVOICE': return "bg-blue-100 text-blue-700 border-blue-300";
+                          case 'DELIVERY': return "bg-orange-100 text-orange-700 border-orange-300";
+                          case 'POSTAL': return "bg-purple-100 text-purple-700 border-purple-300";
+                          case 'VISITED': return "bg-green-100 text-green-700 border-green-300";
+                          case 'IFS': return "bg-indigo-100 text-indigo-700 border-indigo-300";
+                          default: return "bg-gray-100 text-gray-700 border-gray-300";
+                        }
+                      };
+                      
+                      const badgeColor = getBadgeColor(addressTypeName);
                       
                       return (
                         <div 
                           key={`${addressId}-${index}`} 
-                          className="flex items-center justify-between p-2 rounded-md bg-muted/50 border border-border w-full"
+                          className="flex items-center justify-between p-2 rounded-md w-full bg-white border border-gray-200"
                         >
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             <span className={cn(
-                              "text-xs px-2 py-1 rounded font-medium shrink-0",
-                              isDefaultType ? "bg-primary/20 text-primary" : "bg-secondary/20 text-secondary"
+                              "text-xs px-2 py-1 rounded font-medium shrink-0 border",
+                              badgeColor
                             )}>
                               {addressTypeName}
                             </span>

@@ -43,3 +43,4 @@ next-env.d.ts
 # excel
 *.xlsx
 *.xls
+API_Mappings.xlsx
