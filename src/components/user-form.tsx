@@ -258,14 +258,11 @@ export function UserForm() {
         
         if (hasDefaultAlready) {
           // Use toast instead of alert for better UX with close button and error styling
-          toast.error("DEFAULT address is already added. Please select a different address type.", {
+          toast.error("Multiple DEFAULT Addresses are not Allowed!!", {
             duration: 3000,
-            closeButton: false,
-            style: {
-              backgroundColor: '#FEE2E2',
-              color: '#B91C1C',
-              border: '1px solid #F87171'
-            }
+            dismissible: true,
+            className: "bg-destructive text-destructive-foreground border-none",
+            description: "Please select a different address type before adding more addresses."
           });
           return;
         }
