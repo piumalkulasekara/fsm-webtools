@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -212,6 +212,20 @@ export function UserForm() {
   const handleComboboxChange = (field: keyof FormValues, value: string) => {
     setValue(field, value, { shouldValidate: true });
     
+    // Special handling for address type when changing to DEFAULT
+    if (field === "addressType" && value === "DEFAULT") {
+      // Check if there's already a DEFAULT address
+      const hasDefaultAlready = Object.values(addressTypeMap).includes("DEFAULT");
+      if (hasDefaultAlready) {
+        // Inform the user they already have a DEFAULT address
+        toast.warning("A DEFAULT address already exists. If you select an address with this type, you will receive an error.", {
+          duration: 5000,
+          dismissible: true,
+          description: "Please choose a different address type to add another address."
+        });
+      }
+    }
+    
     // Update Contract Post Group and Request Post Group when Lely Center changes
     if (field === "lelyCenter" && value) {
       // Set the same value to all three dropdowns
@@ -251,15 +265,17 @@ export function UserForm() {
     const newAddresses = values.filter(v => !currentAddresses.includes(v));
     
     if (newAddresses.length > 0) {
+      const updatedTypeMap = { ...addressTypeMap };
+      
       // Check if we're trying to add a DEFAULT type address when one already exists
-      const isDefaultType = currentAddressType === "DEFAULT";
-      if (isDefaultType) {
-        const hasDefaultAlready = Object.values(addressTypeMap).includes("DEFAULT");
+      if (currentAddressType === "DEFAULT") {
+        // Find if there's already a DEFAULT address
+        const hasDefaultAlready = Object.values(updatedTypeMap).includes("DEFAULT");
         
         if (hasDefaultAlready) {
-          // Use toast instead of alert for better UX with close button and error styling
-          toast.error("Multiple DEFAULT Addresses are not Allowed!!", {
-            duration: 3000,
+          // Show error and don't add the new addresses with DEFAULT type
+          toast.error("Only one DEFAULT address is allowed. Please select a different address type.", {
+            duration: 5000,
             dismissible: true,
             className: "bg-destructive text-destructive-foreground border-none",
             description: "Please select a different address type before adding more addresses."
@@ -268,11 +284,11 @@ export function UserForm() {
         }
       }
       
-      // Store the address type for each new address
-      const updatedTypeMap = { ...addressTypeMap };
+      // Store the address type for each new address - using the currently selected type
       newAddresses.forEach(address => {
         updatedTypeMap[address] = currentAddressType;
       });
+      
       setAddressTypeMap(updatedTypeMap);
     }
     
@@ -286,20 +302,13 @@ export function UserForm() {
       setAddressTypeMap(updatedTypeMap);
     }
     
-    // For addresses that had no type assigned but are still in the values list,
-    // set them to the current address type (useful for initial loading)
-    const missingTypeAddresses = values.filter(v => !addressTypeMap[v]);
+    // For addresses that might not have a type assigned (unlikely, but just in case)
+    const missingTypeAddresses = values.filter(v => !addressTypeMap[v] && !newAddresses.includes(v));
     if (missingTypeAddresses.length > 0) {
       const updatedTypeMap = { ...addressTypeMap };
       missingTypeAddresses.forEach(address => {
-        // If it's first and there's no DEFAULT yet, make it DEFAULT, 
-        // otherwise use the current address type (or IFS as fallback)
-        const hasDefaultAlready = Object.values(updatedTypeMap).includes("DEFAULT");
-        if (values.indexOf(address) === 0 && !hasDefaultAlready) {
-          updatedTypeMap[address] = "DEFAULT";
-        } else {
-          updatedTypeMap[address] = currentAddressType || "IFS";
-        }
+        // For safety, assign the current type if missing
+        updatedTypeMap[address] = currentAddressType;
       });
       setAddressTypeMap(updatedTypeMap);
     }
@@ -315,8 +324,8 @@ export function UserForm() {
       return addressTypeMap[addressId];
     }
     
-    // Default to IFS for addresses without a type
-    return "IFS";
+    // Default to the current selected address type or IFS if nothing else is available
+    return watch("addressType") || "IFS";
   };
   
   // Function to remove an address
@@ -332,6 +341,11 @@ export function UserForm() {
     delete updatedTypeMap[addressId];
     setAddressTypeMap(updatedTypeMap);
   };
+
+  // Debug useEffect to monitor address type mappings
+  useEffect(() => {
+    console.debug('Address Type Map updated:', addressTypeMap);
+  }, [addressTypeMap]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
