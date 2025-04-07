@@ -198,6 +198,15 @@ export function UserForm() {
 
   const onSubmit = async (data: FormValues) => {
     try {
+      // Debug log for form data
+      console.log("Form data before processing:", {
+        employee: data.employee,
+        mobileUser: data.mobileUser,
+        dispatchable: data.dispatchable,
+        schedulingResource: data.schedulingResource,
+        psoSystemUser: data.psoSystemUser
+      });
+      
       // Get the address type for each address
       const addressTypeMappings = Array.from(data.address || []).map(addressId => ({
         address_id: addressId,
@@ -262,7 +271,7 @@ export function UserForm() {
         email: data.email,
         status: data.personStatus || "01", // Default to active
         license: data.fsmLicense || "NAMED", // Default value
-        check_employee: "Y", // Default value
+        check_employee: data.employee ? "Y" : "N", // Use actual checkbox value
         default_language: data.language || "EN-US",
         currency: data.currency || "EUR",
         access_group: data.lelyCenter || "", // Convert undefined to empty string
@@ -277,6 +286,7 @@ export function UserForm() {
         check_mobileUser: data.mobileUser ? "Y" : "N",
         check_dispatchable: data.dispatchable ? "Y" : "N",
         check_schedResource: data.schedulingResource ? "Y" : "N",
+        check_psoUser: data.psoSystemUser ? "Y" : "N",
         person_group: data.personGroup,
         
         // Complex fields
@@ -627,7 +637,8 @@ export function UserForm() {
                   <div className="flex items-center mt-1 space-x-2 min-w-[80px]">
                     <Checkbox
                       id="sso"
-                      {...register("sso")}
+                      checked={watch("sso")}
+                      onCheckedChange={(checked) => setValue("sso", checked === true)}
                     />
                     <Label htmlFor="sso" className="ml-2">SSO</Label>
                   </div>
@@ -706,7 +717,8 @@ export function UserForm() {
                 <div className="flex items-center space-x-2 mt-8">
                   <Checkbox
                     id="employee"
-                    {...register("employee")}
+                    checked={watch("employee")}
+                    onCheckedChange={(checked) => setValue("employee", checked === true)}
                   />
                   <Label htmlFor="employee" className="ml-2">Employee</Label>
                 </div>
@@ -1135,7 +1147,8 @@ export function UserForm() {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="mobileUser"
-                    {...register("mobileUser")}
+                    checked={watch("mobileUser")}
+                    onCheckedChange={(checked) => setValue("mobileUser", checked === true)}
                   />
                   <Label htmlFor="mobileUser" className="ml-2">Mobile User</Label>
                 </div>
@@ -1143,7 +1156,8 @@ export function UserForm() {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="dispatchable"
-                    {...register("dispatchable")}
+                    checked={watch("dispatchable")}
+                    onCheckedChange={(checked) => setValue("dispatchable", checked === true)}
                   />
                   <Label htmlFor="dispatchable" className="ml-2">Dispatchable</Label>
                 </div>
@@ -1151,7 +1165,8 @@ export function UserForm() {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="schedulingResource"
-                    {...register("schedulingResource")}
+                    checked={watch("schedulingResource")}
+                    onCheckedChange={(checked) => setValue("schedulingResource", checked === true)}
                   />
                   <Label htmlFor="schedulingResource" className="ml-2">Scheduling Resource</Label>
                 </div>
@@ -1159,7 +1174,8 @@ export function UserForm() {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="psoSystemUser"
-                    {...register("psoSystemUser")}
+                    checked={watch("psoSystemUser")}
+                    onCheckedChange={(checked) => setValue("psoSystemUser", checked === true)}
                   />
                   <Label htmlFor="psoSystemUser" className="ml-2">PSO System User</Label>
                 </div>
