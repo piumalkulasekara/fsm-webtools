@@ -25,6 +25,7 @@ interface ComboboxProps {
   emptyMessage?: string;
   className?: string;
   searchPlaceholder?: string;
+  disabled?: boolean;
 }
 
 export function Combobox({
@@ -35,20 +36,25 @@ export function Combobox({
   emptyMessage = "No results found.",
   className,
   searchPlaceholder = "Search...",
+  disabled = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const [width, setWidth] = React.useState<number | undefined>(undefined);
   
-  // Ensure options is always an array
-  const safeOptions = Array.isArray(options) ? options : [];
+  // Ensure options is always an array, wrapped in useMemo to prevent recreation on every render
+  const safeOptions = React.useMemo(() => {
+    return Array.isArray(options) ? options : [];
+  }, [options]);
   
   // Filter options based on search query
   const filteredOptions = React.useMemo(() => {
     if (!searchQuery) return safeOptions;
+    const query = searchQuery.toLowerCase();
     return safeOptions.filter(option => 
-      option.label.toLowerCase().includes(searchQuery.toLowerCase())
+      option.label.toLowerCase().includes(query) || 
+      option.value.toLowerCase().includes(query)
     );
   }, [safeOptions, searchQuery]);
 
@@ -59,15 +65,27 @@ export function Combobox({
     }
   }, [open]);
 
+  // Handle popover open state based on disabled prop
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!disabled) {
+      setOpen(newOpen);
+    }
+  };
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           ref={triggerRef}
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between", className)}
+          className={cn(
+            "w-full justify-between", 
+            disabled && "opacity-50 cursor-not-allowed",
+            className
+          )}
+          disabled={disabled}
         >
           {value
             ? safeOptions.find((option) => option.value === value)?.label || placeholder

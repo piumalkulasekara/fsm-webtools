@@ -1,7 +1,5 @@
-import type { NextConfig } from "next";
-
-// Bundle analyzer configuration
-const config: NextConfig = {
+/** @type {import('next').NextConfig} */
+const config = {
   /* config options here */
   env: {
     NEXT_PUBLIC_APP_VERSION: process.env.npm_package_version,
@@ -24,4 +22,4 @@ const config: NextConfig = {
   poweredByHeader: false,
 };
 
-export default config;
+module.exports = config;
