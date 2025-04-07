@@ -12,7 +12,7 @@ export async function GET() {
       'GLOBAL_CODE_TABLE',
       {
         $select: 'code_name,code_value,description',
-        $filter: "(code_name eq 'LOCALE_CODE' or code_name eq 'POSTING_GROUP' or code_name eq 'ACCESS_GROUP' or code_name eq 'PERSON_GROUP' or code_name eq 'ADDRESS_TYPE') and active eq 'Y'"
+        $filter: "(code_name eq 'LOCALE_CODE' or code_name eq 'POSTING_GROUP' or code_name eq 'ACCESS_GROUP' or code_name eq 'PERSON_GROUP' or code_name eq 'ADDRESS_TYPE' or code_name eq 'PERSON_TYPE') and active eq 'Y'"
       }
     );
 

@@ -93,7 +93,7 @@ export interface MetrixCodeTableResponse {
 }
 
 export interface GlobalCodeTableRecord {
-  code_name: 'LOCALE_CODE' | 'POSTING_GROUP' | 'ACCESS_GROUP' | 'PERSON_GROUP' | 'ADDRESS_TYPE';
+  code_name: 'LOCALE_CODE' | 'POSTING_GROUP' | 'ACCESS_GROUP' | 'PERSON_GROUP' | 'ADDRESS_TYPE' | 'PERSON_TYPE';
   code_value: string;
   description: string;
 }
@@ -141,6 +141,8 @@ export interface MetadataState {
   locations: LocationRecord[];
   addressTypes: DropdownOption[];
   currencies: DropdownOption[];
+  personTypes: DropdownOption[];
+  globalCodeTable: GlobalCodeTableRecord[];
 }
 
 export interface PlaceAddressRecord {

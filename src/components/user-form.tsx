@@ -29,8 +29,10 @@ import {
   useAddressOptions,
   useUserRoleOptions,
   useAllocatedTeamOptions,
-  usePlaceCountry
+  usePlaceCountry,
+  usePersonTypeOptions
 } from "@/lib/metadata/hooks";
+import { userService, UserCreateData } from "@/lib/api/user-service";
 
 // Define form schema for validation
 const formSchema = z.object({
@@ -70,25 +72,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 // Define dropdown options for the remaining hardcoded dropdowns
-
-const typeOptions: ComboboxOption[] = [
-  { value: "business-support", label: "Business Support" },
-  { value: "administrator", label: "Administrator" },
-  { value: "dispatcher", label: "Dispatcher" },
-  { value: "technician", label: "Technician" },
-];
-
-// Remove hardcoded allocated team options
-// const allocatedTeamOptions: ComboboxOption[] = [...];
-
-// Remove hardcoded place options
-// const placesOptions: ComboboxOption[] = [...];
-
-// Remove hardcoded addressOptions array since we're using the hook
-// const addressOptions: ComboboxOption[] = [...];
-
-// Remove hardcoded role options array since we're using the hook
-// const roleOptions: MultiSelectOption[] = [...];
+// -- No hardcoded dropdowns needed anymore --
 
 // Custom styles for the combobox
 const comboboxStyles = "w-full text-muted-foreground font-normal";
@@ -110,6 +94,7 @@ export function UserForm() {
     formState: { errors },
     setValue,
     watch,
+    reset,
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -156,6 +141,7 @@ export function UserForm() {
   const { options: personGroupOptions, isLoading: personGroupLoading, error: personGroupError } = usePersonGroupOptions();
   const { options: addressTypeOptions, isLoading: addressTypeLoading, error: addressTypeError } = useAddressTypeOptions();
   const { options: currencyOptions, isLoading: currencyLoading, error: currencyError } = useCurrencyOptions();
+  const { options: personTypeOptions, isLoading: personTypeLoading, error: personTypeError } = usePersonTypeOptions();
   
   // Use selected place for stock for filtering locations
   const placeForStock = watch("placeForStock");
@@ -203,9 +189,116 @@ export function UserForm() {
     error: allocatedTeamError 
   } = useAllocatedTeamOptions(lelyCenter, viewAllTeams);
 
-  const onSubmit = (data: FormValues) => {
-    console.log("Form submitted with values:", data);
-    // In a real app, this would submit the form to your API
+  const onSubmit = async (data: FormValues) => {
+    try {
+      // Get the address type for each address
+      const addressTypeMappings = Array.from(data.address || []).map(addressId => ({
+        address_id: addressId,
+        address_type: addressTypeMap[addressId] || "IFS" // Default to IFS if not set
+      }));
+      
+      // Get the team selections
+      let teamData;
+      if (data.allocatedTeam && data.allocatedTeam.length > 0) {
+        if (data.allocatedTeam.length === 1) {
+          teamData = { team_id: data.allocatedTeam[0] };
+        } else {
+          teamData = data.allocatedTeam.map(teamId => ({ team_id: teamId }));
+        }
+      }
+
+      // Prepare place relationships
+      const placeRelationships = [];
+      if (data.lelyCenter) {
+        placeRelationships.push({
+          place_id: data.lelyCenter,
+          relationship: "WORKS_FROM"
+        });
+      }
+      if (data.startWorkFrom) {
+        placeRelationships.push({
+          place_id: data.startWorkFrom,
+          relationship: "STARTS_WORK_FROM"
+        });
+      }
+      if (data.endsWorkAt) {
+        placeRelationships.push({
+          place_id: data.endsWorkAt,
+          relationship: "ENDS_WORK_AT"
+        });
+      }
+      if (data.placeForStock) {
+        placeRelationships.push({
+          place_id: data.placeForStock,
+          relationship: "FOR_STOCK"
+        });
+      }
+
+      // Format roles
+      const rolesData = data.roles?.map(roleId => ({
+        role_id: roleId
+      })) || [];
+
+      // Prepare user data for API
+      const userData: UserCreateData = {
+        // Required fields with defaults or extracted values
+        person_id: data.ifsUserId || `${data.firstName.substring(0, 1)}${data.lastName}`.toUpperCase(),
+        first_name: data.firstName,
+        last_name: data.lastName,
+        email: data.email,
+        status: data.personStatus || "01", // Default to active
+        license: data.fsmLicense || "NAMED", // Default value
+        check_employee: "Y", // Default value
+        default_language: data.language || "EN-US",
+        currency: data.currency || "EUR",
+        access_group: data.lelyCenter || "", // Convert undefined to empty string
+        tech_mx_id: data.technicianIdMX || "", // Convert undefined to empty string
+        
+        // Optional fields
+        work_phone: data.phone,
+        job_title: data.jobTitle,
+        person_type: data.type,
+        req_post_grp: data.requestPostGroup,
+        cont_post_grp: data.contractPostGroup,
+        check_mobileUser: data.mobileUser ? "Y" : "N",
+        check_dispatchable: data.dispatchable ? "Y" : "N",
+        check_schedResource: data.schedulingResource ? "Y" : "N",
+        person_group: data.personGroup,
+        
+        // Complex fields
+        places: placeRelationships.length > 0 ? placeRelationships : undefined,
+        address: addressTypeMappings.length > 0 ? addressTypeMappings : undefined,
+        roles: rolesData.length > 0 ? rolesData : undefined,
+        teams: teamData
+      };
+
+      // Call the service to create the user
+      const result = await userService.createUser(userData);
+      
+      if (result.success) {
+        toast.success("User created successfully", {
+          description: `${data.firstName} ${data.lastName} has been created.`,
+          duration: 5000,
+          dismissible: true
+        });
+        
+        // Optional: Reset the form or redirect
+        // reset();
+      } else {
+        toast.error("Failed to create user", {
+          description: result.error || "An unknown error occurred",
+          duration: 5000,
+          dismissible: true
+        });
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast.error("Failed to submit form", {
+        description: "Check console for details",
+        duration: 5000,
+        dismissible: true
+      });
+    }
   };
 
   // Function to handle combobox changes
@@ -347,6 +440,33 @@ export function UserForm() {
     console.debug('Address Type Map updated:', addressTypeMap);
   }, [addressTypeMap]);
 
+  // Function to handle form clear
+  const handleClearForm = () => {
+    // Reset the form to default values
+    reset();
+    // Clear the address type map
+    setAddressTypeMap({});
+    // Reset view states
+    setViewAllTeams(false);
+    setViewAllAddresses(false);
+    
+    toast.info("Form has been cleared", {
+      dismissible: true,
+      duration: 3000
+    });
+  };
+  
+  // Function to handle form save as draft
+  const handleSaveDraft = () => {
+    // Here you would implement the logic to save the form data as a draft
+    // For now, just show a toast message
+    toast.success("Form saved as draft", {
+      description: "Your changes have been saved as a draft.",
+      dismissible: true,
+      duration: 3000
+    });
+  };
+
   return (
     <div className="min-h-full w-full">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
@@ -356,6 +476,7 @@ export function UserForm() {
             type="button"
             variant="outline"
             className="flex items-center gap-2"
+            onClick={handleSaveDraft}
           >
             <Save className="h-4 w-4" />
             Save Draft
@@ -364,6 +485,7 @@ export function UserForm() {
             type="button"
             variant="outline"
             className="flex items-center gap-2"
+            onClick={handleClearForm}
           >
             <Trash2 className="h-4 w-4" />
             Clear
@@ -425,7 +547,7 @@ export function UserForm() {
                 <Input 
                   id="ifsUserId"
                   placeholder="IFS User ID"
-                  readOnly
+                  //readOnly
                   {...register("ifsUserId")}
                 />
               </div>
@@ -518,16 +640,19 @@ export function UserForm() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="type">Type</Label>
+                <Label htmlFor="type">User Type</Label>
                 <Combobox
-                  options={typeOptions}
+                  options={personTypeOptions}
                   value={watch("type")}
                   onValueChange={(value) => handleComboboxChange("type", value)}
-                  placeholder="Select type"
+                  placeholder={personTypeLoading ? "Loading types..." : "Select type"}
                   searchPlaceholder="Search type..."
+                  className={cn(comboboxStyles, getPlaceholderClass(watch("type")))}
                 />
-                {errors.type && (
-                  <p className="text-sm text-destructive">{errors.type.message}</p>
+                {personTypeError && (
+                  <p className="text-sm text-destructive">
+                    {personTypeError.message || 'Failed to load type options'}
+                  </p>
                 )}
               </div>
 

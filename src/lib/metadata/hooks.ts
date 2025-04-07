@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { MetadataService } from './service';
 import type { DropdownOption, MetadataState, Team, Metadata, PlaceAddressRecord, UserRoleRecord, TeamRecord } from './types';
 import type { MultiSelectOption } from '@/components/ui/multi-select';
+import type { ComboboxOption } from '@/components/ui/combobox';
 
 const metadataService = MetadataService.getInstance();
 const METADATA_QUERY_KEY = ['metadata'];
@@ -515,6 +516,23 @@ export function usePlaceCountry(placeId?: string): {
 
   return {
     country,
+    isLoading,
+    error
+  };
+}
+
+/**
+ * Hook to access person type options
+ */
+export function usePersonTypeOptions(): {
+  options: ComboboxOption[];
+  isLoading: boolean;
+  error: Error | null;
+} {
+  const { data, isLoading, error } = useMetadata();
+  
+  return {
+    options: data?.personTypes ?? [],
     isLoading,
     error
   };

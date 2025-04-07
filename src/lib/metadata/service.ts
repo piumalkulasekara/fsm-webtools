@@ -291,6 +291,7 @@ export class MetadataService {
     const accessGroups = this.mapGlobalCodeToDropdownOptions(globalRecords, 'ACCESS_GROUP');
     const personGroups = this.mapGlobalCodeToDropdownOptions(globalRecords, 'PERSON_GROUP');
     const addressTypes = this.mapGlobalCodeToDropdownOptions(globalRecords, 'ADDRESS_TYPE');
+    const personTypes = this.mapGlobalCodeToDropdownOptions(globalRecords, 'PERSON_TYPE');
 
     // Map Currency records
     const currencies = this.mapCurrencyToDropdownOptions(currencyRecords);
@@ -305,7 +306,9 @@ export class MetadataService {
       personGroups,
       locations: locationRecords,  // Return the raw location records
       addressTypes,
-      currencies
+      currencies,
+      personTypes,
+      globalCodeTable: globalRecords // Store the raw global code table records
     };
   }
 }
