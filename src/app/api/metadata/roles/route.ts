@@ -4,12 +4,12 @@ import type { UserRoleResponse } from '@/lib/metadata/types';
 
 /**
  * GET handler for user roles metadata
- * Fetches from USER_ROLE with proper authentication
+ * Fetches from OData user_role endpoint directly
  */
 export async function GET() {
   try {
     const response = await apiClient.get<UserRoleResponse>(
-      'USER_ROLE',
+      'user_role',
       {
         $select: 'user_role,description'
       }

@@ -12,4 +12,4 @@ Piumal Kulasekara @LeapKoders Pvt. Ltd
 - [ ] License Setup
 - [ ] Add [Semantic Release](https://semantic-release.gitbook.io/semantic-release/)
 - [ ] Integrate [Resend](https://resend.com/home) for email handling
-- [ ] Update endpoints. eg: Roles can retrieve via /odata/user_role
+- [x] Update endpoints. eg: Roles can retrieve via /odata/user_role
