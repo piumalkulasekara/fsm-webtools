@@ -1,28 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { queryService, errorHandler } from '@/lib/api';
 
 /**
  * GET handler for dynamic queries
  * Executes a query based on the queryName parameter and search params
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { queryName: string } }
-) {
+export async function GET(request, context) {
   try {
     // Extract query parameters
     const { searchParams } = new URL(request.url);
-    const queryName = params.queryName;
+    const queryName = context.params.queryName;
     
     // Convert searchParams to a plain object for the query service
-    const queryParams: Record<string, string | string[]> = {};
+    const queryParams = {};
     searchParams.forEach((value, key) => {
       if (queryParams[key]) {
         // If the key already exists, convert to array or push to existing array
         if (Array.isArray(queryParams[key])) {
-          (queryParams[key] as string[]).push(value);
+          queryParams[key].push(value);
         } else {
-          queryParams[key] = [queryParams[key] as string, value];
+          queryParams[key] = [queryParams[key], value];
         }
       } else {
         queryParams[key] = value;

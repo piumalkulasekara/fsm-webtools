@@ -29,7 +29,7 @@ export function PersonStatusDropdown({
     if (options.length > 0 && !value && onChange) {
       onChange(options[0].value);
     }
-  }, [options, onChange]);
+  }, [options, onChange, value]);
 
   return (
     <div className="relative">

@@ -43,8 +43,10 @@ export function Combobox({
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const [width, setWidth] = React.useState<number | undefined>(undefined);
   
-  // Ensure options is always an array
-  const safeOptions = Array.isArray(options) ? options : [];
+  // Ensure options is always an array, wrapped in useMemo to prevent recreation on every render
+  const safeOptions = React.useMemo(() => {
+    return Array.isArray(options) ? options : [];
+  }, [options]);
   
   // Filter options based on search query
   const filteredOptions = React.useMemo(() => {

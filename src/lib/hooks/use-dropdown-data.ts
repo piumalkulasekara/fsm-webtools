@@ -1,6 +1,6 @@
 'use client';
 
-import { useApiQuery } from '@/lib/api-hooks';
+import { useApiQuery } from '@/lib/api/hooks';
 
 export interface DropdownOption {
   id: string;

@@ -23,46 +23,46 @@ export const apiClient = {
    * Make a GET request to the OData API
    */
   async get<T>(path: string, params?: Record<string, string>): Promise<T> {
-    return this.request<T>('GET', path, undefined, params);
+    return this.request('GET', path, undefined, params) as Promise<T>;
   },
 
   /**
    * Make a POST request to the OData API
    */
   async post<T>(path: string, data?: unknown): Promise<T> {
-    return this.request<T>('POST', path, data);
+    return this.request('POST', path, data) as Promise<T>;
   },
 
   /**
    * Make a PUT request to the OData API
    */
   async put<T>(path: string, data: unknown): Promise<T> {
-    return this.request<T>('PUT', path, data);
+    return this.request('PUT', path, data) as Promise<T>;
   },
 
   /**
    * Make a PATCH request to the OData API
    */
   async patch<T>(path: string, data: unknown): Promise<T> {
-    return this.request<T>('PATCH', path, data);
+    return this.request('PATCH', path, data) as Promise<T>;
   },
 
   /**
    * Make a DELETE request to the OData API
    */
   async delete<T>(path: string): Promise<T> {
-    return this.request<T>('DELETE', path);
+    return this.request('DELETE', path) as Promise<T>;
   },
 
   /**
    * Generic request method for all API calls
    */
-  async request<T>(
+  async request(
     method: string,
     path: string,
     data?: unknown,
     params?: Record<string, string>
-  ): Promise<T> {
+  ): Promise<unknown> {
     const baseUrl = getApiBaseUrl();
     const url = new URL(`${baseUrl}/${path.startsWith('/') ? path.slice(1) : path}`);
 
@@ -121,12 +121,12 @@ export const apiClient = {
 
       // Handle 204 No Content
       if (response.status === 204) {
-        return {} as T;
+        return {};
       }
 
       // Parse JSON response
       const result = await response.json();
-      return result as T;
+      return result;
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
