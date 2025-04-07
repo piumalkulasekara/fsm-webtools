@@ -36,6 +36,7 @@ export interface UserCreateData {
   places?: Array<{
     place_id: string;
     relationship: string;
+    location?: string | null;
   }>;
   
   address?: Array<{
@@ -74,6 +75,8 @@ export const userService = {
    */
   async createUser(userData: UserCreateData): Promise<{ success: boolean; data?: CreateUserResponse; error?: string }> {
     try {
+      console.log('Sending user data to API:', userData);
+      
       const response = await fetch('/api/user/create', {
         method: 'POST',
         headers: {
@@ -83,6 +86,11 @@ export const userService = {
       });
       
       const result = await response.json();
+      
+      // Log the full response for debugging
+      console.log('=== API RESPONSE ===');
+      console.log(result);
+      console.log('===================');
       
       if (!response.ok) {
         console.error('Error creating user:', result);

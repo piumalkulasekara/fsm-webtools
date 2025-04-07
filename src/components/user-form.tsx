@@ -8,9 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronDown, Save, Trash2, Send } from "lucide-react";
+import { ChevronDown, Save, Trash2, Send, Bug } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Combobox, ComboboxOption } from "@/components/ui/combobox";
+import { Combobox } from "@/components/ui/combobox";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { AddressMultiSelect } from "@/components/ui/address-multi-select";
 import { PersonStatusDropdown } from "@/components/ui/dropdowns/PersonStatusDropdown";
@@ -32,7 +32,7 @@ import {
   usePlaceCountry,
   usePersonTypeOptions
 } from "@/lib/metadata/hooks";
-import { userService, UserCreateData } from "@/lib/api/user-service";
+import { userService, UserCreateData, CreateUserResponse } from "@/lib/api/user-service";
 
 // Define form schema for validation
 const formSchema = z.object({
@@ -87,6 +87,13 @@ export function UserForm() {
   const [viewAllTeams, setViewAllTeams] = useState(false);
   const [viewAllAddresses, setViewAllAddresses] = useState(false);
   const [addressTypeMap, setAddressTypeMap] = useState<Record<string, string>>({});
+  const [debugResponse, setDebugResponse] = useState<{
+    success?: boolean;
+    data?: CreateUserResponse;
+    error?: string;
+  } | Error | null>(null);
+  const [showDebug, setShowDebug] = useState(false);
+  const isDev = process.env.NODE_ENV === 'development';
   
   const {
     register,
@@ -212,26 +219,33 @@ export function UserForm() {
       if (data.lelyCenter) {
         placeRelationships.push({
           place_id: data.lelyCenter,
-          relationship: "WORKS_FROM"
+          relationship: "WORKS_FROM",
+          location: null
         });
       }
       if (data.startWorkFrom) {
         placeRelationships.push({
           place_id: data.startWorkFrom,
-          relationship: "STARTS_WORK_FROM"
+          relationship: "STARTS_WORK_FROM",
+          location: null
         });
       }
       if (data.endsWorkAt) {
         placeRelationships.push({
           place_id: data.endsWorkAt,
-          relationship: "ENDS_WORK_AT"
+          relationship: "ENDS_WORK_AT",
+          location: null
         });
       }
       if (data.placeForStock) {
-        placeRelationships.push({
+        // Include the location value in the FOR_STOCK relationship if available
+        const forStockRelationship = {
           place_id: data.placeForStock,
-          relationship: "FOR_STOCK"
-        });
+          relationship: "FOR_STOCK",
+          location: data.stockLocation || null
+        };
+        
+        placeRelationships.push(forStockRelationship);
       }
 
       // Format roles
@@ -275,6 +289,11 @@ export function UserForm() {
       // Call the service to create the user
       const result = await userService.createUser(userData);
       
+      // Store the response for debugging
+      if (isDev) {
+        setDebugResponse(result);
+      }
+      
       if (result.success) {
         toast.success("User created successfully", {
           description: `${data.firstName} ${data.lastName} has been created.`,
@@ -298,6 +317,11 @@ export function UserForm() {
         duration: 5000,
         dismissible: true
       });
+      
+      // Store the error for debugging
+      if (isDev) {
+        setDebugResponse(error as Error);
+      }
     }
   };
 
@@ -472,6 +496,18 @@ export function UserForm() {
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
         {/* Top Action Buttons */}
         <div className="flex justify-end space-x-2">
+          {isDev && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => setShowDebug(!showDebug)}
+              title="Toggle Debug Panel"
+            >
+              <Bug className="h-4 w-4" />
+            </Button>
+          )}
           <Button
             type="button"
             variant="outline"
@@ -498,6 +534,16 @@ export function UserForm() {
             Publish
           </Button>
         </div>
+
+        {/* Debug Panel - Only shown in development mode */}
+        {isDev && showDebug && debugResponse && (
+          <div className="p-4 border border-yellow-400 bg-yellow-50 rounded-md overflow-auto max-h-96">
+            <h3 className="font-bold mb-2 text-yellow-800">Debug: API Response</h3>
+            <pre className="text-xs overflow-auto">
+              {JSON.stringify(debugResponse, null, 2)}
+            </pre>
+          </div>
+        )}
 
         {/* General Info Section */}
         <div className="rounded-md border">

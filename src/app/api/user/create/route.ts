@@ -36,7 +36,8 @@ const createUserSchema = z.object({
   places: z.array(
     z.object({
       place_id: z.string(),
-      relationship: z.string()
+      relationship: z.string(),
+      location: z.string().nullable().optional()
     })
   ).optional(),
   
@@ -95,7 +96,9 @@ export async function POST(request: NextRequest) {
       }
     };
     
-    console.log('Sending payload to OData API:', JSON.stringify(payload, null, 2));
+    console.log('=================== ODATA API PAYLOAD START ===================');
+    console.log(JSON.stringify(payload, null, 2));
+    console.log('=================== ODATA API PAYLOAD END ===================');
     
     // Send the request to the OData API
     try {
@@ -104,7 +107,9 @@ export async function POST(request: NextRequest) {
         payload
       );
       
-      console.log('OData API response:', JSON.stringify(response, null, 2));
+      console.log('=================== ODATA API RESPONSE START ===================');
+      console.log(JSON.stringify(response, null, 2));
+      console.log('=================== ODATA API RESPONSE END ===================');
       
       // Return the response from the OData API
       return NextResponse.json(response, { status: 200 });
