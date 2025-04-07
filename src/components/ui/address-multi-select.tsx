@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { X, Check, ChevronsUpDown, Search } from "lucide-react";
+import { Check, ChevronsUpDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,14 +10,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 
 export type MultiSelectOption = {
   value: string;
   label: string;
 };
 
-interface MultiSelectProps {
+interface AddressMultiSelectProps {
   options: MultiSelectOption[];
   values: string[];
   onValuesChange: (values: string[]) => void;
@@ -25,43 +24,8 @@ interface MultiSelectProps {
   emptyMessage?: string;
   className?: string;
   searchPlaceholder?: string;
-  badgeVariant?: "default" | "secondary" | "destructive" | "outline";
   closeOnSelect?: boolean;
 }
-
-// Memoized badge component for better performance
-const SelectedBadge = React.memo(
-  ({ 
-    option, 
-    variant, 
-    onRemove 
-  }: { 
-    option: MultiSelectOption; 
-    variant?: "default" | "secondary" | "destructive" | "outline";
-    onRemove: (value: string) => void;
-  }) => (
-    <Badge 
-      key={option.value} 
-      variant={variant} 
-      className="px-3 py-1.5 text-sm rounded-md"
-    >
-      {option.label}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-auto p-0 px-1.5 ml-2 -mr-1 hover:bg-transparent"
-        onClick={(e) => {
-          e.preventDefault();
-          onRemove(option.value);
-        }}
-      >
-        <X className="h-4 w-4" />
-        <span className="sr-only">Remove {option.label}</span>
-      </Button>
-    </Badge>
-  )
-);
-SelectedBadge.displayName = "SelectedBadge";
 
 // Memoized option component for better performance
 const SelectOption = React.memo(
@@ -100,7 +64,7 @@ const SelectOption = React.memo(
 );
 SelectOption.displayName = "SelectOption";
 
-export function MultiSelect({
+export function AddressMultiSelect({
   options = [],
   values = [],
   onValuesChange,
@@ -108,9 +72,8 @@ export function MultiSelect({
   emptyMessage = "No results found.",
   className,
   searchPlaceholder = "Search...",
-  badgeVariant = "secondary",
   closeOnSelect = false,
-}: MultiSelectProps) {
+}: AddressMultiSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const triggerRef = React.useRef<HTMLButtonElement>(null);
@@ -149,12 +112,6 @@ export function MultiSelect({
     }
   }, [values, onValuesChange, closeOnSelect]);
 
-  // Handle removing an option
-  const handleRemove = React.useCallback((value: string) => {
-    const newValues = values.filter(v => v !== value);
-    onValuesChange(newValues);
-  }, [values, onValuesChange]);
-
   // Memoize selected options
   const selectedOptions = React.useMemo(() => 
     values.map(value => safeOptions.find(o => o.value === value))
@@ -171,20 +128,6 @@ export function MultiSelect({
 
   return (
     <div className="relative">
-      {/* Display selected items as badges - now above the dropdown */}
-      {selectedOptions.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-3">
-          {selectedOptions.map(option => (
-            <SelectedBadge 
-              key={option.value}
-              option={option} 
-              variant={badgeVariant}
-              onRemove={handleRemove}
-            />
-          ))}
-        </div>
-      )}
-
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
