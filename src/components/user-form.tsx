@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Save, Trash2, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 import { MultiSelect } from "@/components/ui/multi-select";
@@ -349,6 +349,33 @@ export function UserForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      {/* Top Action Buttons */}
+      <div className="flex justify-end space-x-2">
+        <Button
+          type="button"
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Save className="h-4 w-4" />
+          Save Draft
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Trash2 className="h-4 w-4" />
+          Clear
+        </Button>
+        <Button
+          type="submit"
+          className="flex items-center gap-2"
+        >
+          <Send className="h-4 w-4" />
+          Publish
+        </Button>
+      </div>
+
       {/* General Info Section */}
       <div className="rounded-md border">
         <div 
@@ -991,11 +1018,6 @@ export function UserForm() {
             </div>
           </div>
         )}
-      </div>
-
-      <div className="flex justify-end space-x-4">
-        <Button variant="outline" type="button">Cancel</Button>
-        <Button type="submit">Save</Button>
       </div>
     </form>
   );
