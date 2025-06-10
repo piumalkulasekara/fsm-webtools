@@ -44,3 +44,6 @@ next-env.d.ts
 *.xlsx
 *.xls
 API_Mappings.xlsx
+
+# cursor
+.cursor/
